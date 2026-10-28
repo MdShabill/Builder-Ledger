@@ -1,0 +1,6 @@
+@BuilderLedger.API_HostAddress = http://localhost:5219
+
+GET {{BuilderLedger.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
