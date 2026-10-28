@@ -1,9 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.14.37411.7 d17.14
+VisualStudioVersion = 17.14.37411.7
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BuilderLedger.API", "BuilderLedger.API\BuilderLedger.API.csproj", "{DAF51117-480B-4D48-BAFB-8E986FAE0AA5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BuilderLedger.Core", "BuilderLedger.Core\BuilderLedger.Core.csproj", "{1B19B048-C08E-4E5C-A95A-8091C07F52BD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{DAF51117-480B-4D48-BAFB-8E986FAE0AA5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DAF51117-480B-4D48-BAFB-8E986FAE0AA5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DAF51117-480B-4D48-BAFB-8E986FAE0AA5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1B19B048-C08E-4E5C-A95A-8091C07F52BD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1B19B048-C08E-4E5C-A95A-8091C07F52BD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1B19B048-C08E-4E5C-A95A-8091C07F52BD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1B19B048-C08E-4E5C-A95A-8091C07F52BD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
