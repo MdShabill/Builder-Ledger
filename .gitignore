@@ -1,1 +1,60 @@
-ss
+# Visual Studio
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Visual Studio Code and other editors
+.vscode/
+.idea/
+*.swp
+*~
+
+# .NET / ASP.NET Core
+**/bin/
+**/obj/
+**/Debug/
+**/Release/
+**/publish/
+**/TestResults/
+**/artifacts/
+*.pdb
+*.cache
+*.log
+*.nupkg
+*.snupkg
+
+# Local publish profiles and deployment settings
+*.pubxml
+*.publishsettings
+
+# React / Node.js / Vite
+**/node_modules/
+**/dist/
+**/coverage/
+**/.vite/
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+
+# Local application settings
+appsettings.Local.json
+secrets.json
+
+# SQL Server database files and backups
+*.mdf
+*.ldf
+*.ndf
+*.bak
+*.trn
+
+# Operating system files
+.DS_Store
+Thumbs.db
+desktop.ini
