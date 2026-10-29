@@ -45,7 +45,7 @@ namespace BuilderLedger.API.Controllers
             if (siteId <= 0)
                 return BadRequest(new { message = "No site selected. Please select a site first." });
 
-            var serviceTypes = _serviceTypeRepository.GetAll();
+            List<ServiceType> serviceTypes = _serviceTypeRepository.GetAll();
             if (serviceTypes == null || !serviceTypes.Any())
                 return NotFound(new { message = "No Service Types Found" });
 
@@ -65,6 +65,7 @@ namespace BuilderLedger.API.Controllers
                 selectedServiceTypeId = activeServiceTypeId
             });
         }
+
 
         // GET /api/CostMasterAPI/GetActiveCost?serviceTypeId=3
         [HttpGet(CostMasterAPIEnpoints.GetActiveCost)]
