@@ -77,7 +77,7 @@ namespace BuilderLedger.API.Controllers
             if (serviceTypeId <= 0)
                 return BadRequest(new { message = "Invalid Service Type Id" });
 
-            var costMaster = _costMasterRepository.GetActiveCostDetail(serviceTypeId, siteId);
+            CostMaster costMaster = _costMasterRepository.GetActiveCostDetail(serviceTypeId, siteId);
 
             if (costMaster == null)
                 return NotFound(new { message = "No Active Cost Found" });
@@ -94,7 +94,7 @@ namespace BuilderLedger.API.Controllers
             if (siteId <= 0)
                 return BadRequest(new { message = "No site selected." });
 
-            var costMaster = _costMasterRepository.GetById(id, siteId);
+            CostMaster costMaster = _costMasterRepository.GetById(id, siteId);
             if (costMaster == null)
                 return NotFound(new { message = "Cost Master record not found for the current site." });
 
@@ -119,7 +119,7 @@ namespace BuilderLedger.API.Controllers
 
             costMasterVm.SiteId = siteId;
 
-            var costMaster = _imapper.Map<AddNewCostMasterVm, CostMaster>(costMasterVm);
+            CostMaster costMaster = _imapper.Map<AddNewCostMasterVm, CostMaster>(costMasterVm);
             int affectedRowCount = _costMasterRepository.Create(costMaster);
 
             if (affectedRowCount > 0)
@@ -146,7 +146,7 @@ namespace BuilderLedger.API.Controllers
             costMasterVm.Id = id;
             costMasterVm.SiteId = siteId;
 
-            var costMaster = _imapper.Map<AddNewCostMasterVm, CostMaster>(costMasterVm);
+            CostMaster costMaster = _imapper.Map<AddNewCostMasterVm, CostMaster>(costMasterVm);
             int affectedRowCount = _costMasterRepository.Update(costMaster);
 
             if (affectedRowCount > 0)
