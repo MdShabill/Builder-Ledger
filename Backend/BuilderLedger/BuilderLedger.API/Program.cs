@@ -40,10 +40,10 @@ try
     builder.Services.AddSession();
 
     // PDF service
-    builder.Services.AddSingleton<BuilderLedger.API.Services.SiteReportPdfService>();
+    //builder.Services.AddSingleton<BuilderLedger.API.Services.SiteReportPdfService>();
 
-    builder.Services.AddHostedService(sp => sp.GetRequiredService<BuilderLedger.API.Services.SiteReportPdfService>()
-    );
+    //builder.Services.AddHostedService(sp => sp.GetRequiredService<BuilderLedger.API.Services.SiteReportPdfService>()
+    //);
 
     // Email service
     builder.Services.Configure<EmailSettings>(
