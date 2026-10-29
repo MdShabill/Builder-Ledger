@@ -15,7 +15,6 @@ namespace BuilderLedger.API.Controllers
         private readonly IMapper _imapper;
         private readonly ILogger<AccountController> _logger;
 
-
         public AccountController(IUserRepository userRepository, ILogger<AccountController> logger)
         {
             _userRepository = userRepository;

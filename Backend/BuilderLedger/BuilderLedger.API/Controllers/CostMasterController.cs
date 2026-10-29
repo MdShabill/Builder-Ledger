@@ -36,7 +36,6 @@ namespace BuilderLedger.API.Controllers
             _imapper = configuration.CreateMapper();
         }
 
-
         // GET /api/CostMasterAPI?serviceTypeId=3
         [HttpGet(CostMasterAPIEnpoints.Index)]
         public IActionResult Index(int? serviceTypeId)

@@ -52,7 +52,7 @@ namespace BuilderLedger.API.Helpers
 
         public void RegisterDapperRepositories(IServiceCollection services, string connectionString)
         {
-            //services.AddScoped<IDashboardRepository>(svc => new DashboardRepositoryUsingDapper(connectionString));
+            services.AddScoped<IDashboardRepository>(svc => new DashboardRepositoryUsingDapper(connectionString));
 
             services.AddScoped<ICostMasterRepository>(svc => new CostMasterRepositoryUsingDapper(connectionString));
 
