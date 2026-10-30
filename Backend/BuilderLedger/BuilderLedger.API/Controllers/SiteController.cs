@@ -67,11 +67,11 @@ namespace BuilderLedger.API.Controllers
             _imapper = configuration.CreateMapper();
         }
 
+        // GET api/Site
         [HttpGet(SiteAPIEnpoints.GetAll)]
         public IActionResult GetAll()
         {
             _logger.LogInformation("API Action: GetAll | Invoked: {InvokedAt}", DateTime.Now.ToString("HH:mm:ss.fff"));
-
 
             const string cacheKey = "AllSites";
 
@@ -90,6 +90,7 @@ namespace BuilderLedger.API.Controllers
             return Ok(siteApiVm);
         }
 
+        // GET api/Site/filter?search=&statusId=&fromDate=&toDate=&budgetFrom=&budgetTo=
         [HttpGet(SiteAPIEnpoints.FilterSites)]
         public IActionResult FilterSites(string? search, int? statusId, DateTime? fromDate, DateTime? toDate,
                                          decimal? budgetFrom, decimal? budgetTo)
@@ -109,26 +110,14 @@ namespace BuilderLedger.API.Controllers
                 return BadRequest("Budget From cannot be greater than Budget To.");
 
             List<Site> sites = _siteRepository.GetSites(search, statusId, fromDate, toDate, budgetFrom, budgetTo);
-            var siteApiVm = _imapper.Map<List<Site>, List<SiteAPIDTO>>(sites);
+            var siteApiDto = _imapper.Map<List<Site>, List<SiteAPIDTO>>(sites);
 
             _logger.LogInformation("\nTotal Site: {TotalSite}", sites?.Count ?? 0);
 
-            return Ok(siteApiVm);
+            return Ok(siteApiDto);
         }
 
-        //[HttpGet(SiteAPIEnpoints.SelectSite)]
-        //public IActionResult SelectSite(int id)
-        //{
-        //    _logger.LogInformation("API Action: SelectSite | Invoked: {InvokedAt}", DateTime.Now.ToString("HH:mm:ss.fff"));
-
-        //    Site selectedSite = _siteRepository.GetSiteById(id);
-        //    if (selectedSite == null)
-        //        return NotFound("Site not found");
-
-        //    return Ok(selectedSite);
-        //}
-
-
+        // POST api/Site
         [HttpPost(SiteAPIEnpoints.Add)]
         public IActionResult Add(SiteAPIDTO siteApiDto)
         {
@@ -191,6 +180,7 @@ namespace BuilderLedger.API.Controllers
         }
 
 
+        // GET api/Site/2
         [HttpGet(SiteAPIEnpoints.Edit)]
         public IActionResult Edit(int id)
         {
@@ -230,27 +220,34 @@ namespace BuilderLedger.API.Controllers
             return Ok(siteApiVm);
         }
 
-        [HttpPost(SiteAPIEnpoints.Update)]
-        public async Task<IActionResult> Update([FromBody] SiteAPIDTO siteApiDto)
+        // PUT api/Site/2
+        [HttpPut(SiteAPIEnpoints.Update)]
+        public async Task<IActionResult> Update(int id, [FromBody] SiteAPIDTO siteApiDto)
         {
             _logger.LogInformation("API Action: Update | Invoked: {InvokedAt}", DateTime.Now.ToString("HH:mm:ss.fff"));
-
-            if (siteApiDto == null || siteApiDto.Id <= 0)
+ 
+            if (siteApiDto == null || id <= 0)
                 return BadRequest("Invalid site data.");
-
-            Site oldSite = _siteRepository.GetSiteById(siteApiDto.Id);
-
-            List<SiteScope> oldScopes = _siteScopeRepository.Get(siteApiDto.Id);
-
+ 
+            // The id in the URL is the source of truth.
+            siteApiDto.Id = id;
+ 
+            Site oldSite = _siteRepository.GetSiteById(id);
+ 
+            if (oldSite == null)
+                return NotFound("Site not found");
+ 
+            List<SiteScope> oldScopes = _siteScopeRepository.Get(id);
+ 
             Site site = _imapper.Map<SiteAPIDTO, Site>(siteApiDto);
             int affectedRows = _siteRepository.Update(site);
-
+ 
             if (affectedRows <= 0)
                 return StatusCode(500, "Site update failed.");
-
+ 
             // Save address.
             AddAddressIfPresent(site.Id, siteApiDto);
-
+ 
             // Save service provider assignments.
             _siteRepository.AddAOrUpdateSiteServiceProviderBridge(site.Id, ServiceTypes.MasterMasion, siteApiDto.SelectedMasterMasonIds ?? new List<int>());
             _siteRepository.AddAOrUpdateSiteServiceProviderBridge(site.Id, ServiceTypes.Electrician, siteApiDto.SelectedElectricianIds ?? new List<int>());
@@ -259,34 +256,34 @@ namespace BuilderLedger.API.Controllers
             _siteRepository.AddAOrUpdateSiteServiceProviderBridge(site.Id, ServiceTypes.Painter, siteApiDto.SelectedPainterIds ?? new List<int>());
             _siteRepository.AddAOrUpdateSiteServiceProviderBridge(site.Id, ServiceTypes.Carpenter, siteApiDto.SelectedCarpenterIds ?? new List<int>());
             _siteRepository.AddAOrUpdateSiteServiceProviderBridge(site.Id, ServiceTypes.Tiler, siteApiDto.SelectedTilerIds ?? new List<int>());
-
+ 
             // Save selected work scopes.
             List<(int, int, string?)> mappedScopes = new();
             List<ScopeSaveItem> selectedScopes = siteApiDto.SelectedScopes ?? new();
-
+ 
             foreach (ScopeSaveItem scope in selectedScopes)
             {
                 mappedScopes.Add((scope.SiteScopeMasterId, scope.ScopeStatusId, scope.Remarks));
             }
-
+ 
             _siteScopeRepository.SaveScopes(site.Id, mappedScopes);
-
+ 
             // Refresh cached sites.
             _cache.Remove("AllSites");
-
+ 
             // Compare old and new data and send notification email.
             bool emailSent = await SendSiteUpdateEmail(siteApiDto, oldSite, oldScopes);
-
+ 
             _logger.LogInformation("Site {SiteId} updated. Email sent: {EmailSent}", site.Id, emailSent);
-
+ 
             return Ok(new
             {
                 message = "Site updated successfully.",
-                siteId = site.Id,
-                //emailSent
+                siteId = site.Id
             });
         }
 
+        // DELETE api/Site/3
         [HttpDelete(SiteAPIEnpoints.Delete)]
         public async Task<IActionResult> Delete(int siteId)
         {
@@ -315,6 +312,7 @@ namespace BuilderLedger.API.Controllers
         }
 
 
+        // GET api/Site/dropdown-data
         [HttpGet(SiteAPIEnpoints.DropdownData)]
         public IActionResult GetDropdownData()
         {
@@ -386,6 +384,7 @@ namespace BuilderLedger.API.Controllers
             return Ok(response);
         }
 
+        // GET api/Site/service-providers
         [HttpGet(SiteAPIEnpoints.GetServiceProviders)]
         public IActionResult GetServiceProviders()
         {
@@ -426,6 +425,7 @@ namespace BuilderLedger.API.Controllers
             return Ok(new { masterMasons, electricians, labours, plumbers, painters, carpenters, tilers });
         }
 
+        // PATCH api/Site/scope-status
         [HttpPatch(SiteAPIEnpoints.UpdateScopeStatus)]
         public IActionResult UpdateScopeStatus([FromBody] UpdateScopeStatusDto dto)
         {

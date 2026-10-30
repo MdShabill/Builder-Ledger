@@ -53,13 +53,19 @@ namespace BuilderLedger.API.APIControllers
 
         public class SiteAPIEnpoints
         {
+            // GET    api/Site                    -> list all sites
             public const string GetAll = "";
+            // GET    api/Site/filter?search=...  -> filtered list
             public const string FilterSites = "filter";
 
-            public const string Add = "add";
-            public const string Edit = "edit/{id:int}";
-            public const string Update = "update";
-            public const string Delete = "{siteId:int}";
+            // POST   api/Site                    -> create
+            public const string Add = "";
+            // GET    api/Site/2                  -> load one site (Edit page)
+            public const string Edit = "{id:int}";
+            // PUT    api/Site/2                  -> update
+            public const string Update = "{id:int}";
+            // DELETE api/Site/2                  -> delete
+            public const string Delete = "{id:int}";
 
             public const string DropdownData = "dropdown-data";
             public const string GetServiceProviders = "service-providers";
