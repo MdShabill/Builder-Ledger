@@ -27,7 +27,7 @@ export const API_URLS = {
     add: `${API_BASE_URL}/Site/add`,
     update: `${API_BASE_URL}/Site/update`,
     delete: (id: number) => `${API_BASE_URL}/Site/${id}`,
-    all: `${API_BASE_URL}/Site/GetAllSites`,
+    all: `${API_BASE_URL}/Site/GetAll`,
     select: (id: number) => `${API_BASE_URL}/Site/select-site?id=${id}`,
     edit: (id: number) => `${API_BASE_URL}/Site/edit/${id}`,
     dropdown: `${API_BASE_URL}/Site/dropdown-data`,
