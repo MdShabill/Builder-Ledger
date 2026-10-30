@@ -55,11 +55,12 @@ namespace BuilderLedger.API.APIControllers
         {
             public const string GetAll = "";
             public const string FilterSites = "filter";
-            //public const string SelectSite = "select-site";
+
             public const string Add = "add";
-            public const string Edit = "edit/{id}";
+            public const string Edit = "edit/{id:int}";
             public const string Update = "update";
-            public const string Delete = "{siteId}";
+            public const string Delete = "{siteId:int}";
+
             public const string DropdownData = "dropdown-data";
             public const string GetServiceProviders = "service-providers";
             public const string UpdateScopeStatus = "scope-status";
