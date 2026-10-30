@@ -53,9 +53,9 @@ namespace BuilderLedger.API.APIControllers
 
         public class SiteAPIEnpoints
         {
-            public const string GetAllSites = "GetAllSites";
+            public const string GetAll = "";
             public const string FilterSites = "filter";
-            public const string SelectSite = "select-site";
+            //public const string SelectSite = "select-site";
             public const string Add = "add";
             public const string Edit = "edit/{id}";
             public const string Update = "update";

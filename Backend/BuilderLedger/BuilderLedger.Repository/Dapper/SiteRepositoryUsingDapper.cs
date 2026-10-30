@@ -15,7 +15,7 @@ namespace BuilderLedger.Repository.Dapper
             _connectionString = connectionString;
         }
 
-        public List<Site> GetAllSites()
+        public List<Site> GetAll()
         {
             using (IDbConnection db = new SqlConnection(_connectionString))
             {

@@ -67,10 +67,10 @@ namespace BuilderLedger.API.Controllers
             _imapper = configuration.CreateMapper();
         }
 
-        [HttpGet(SiteAPIEnpoints.GetAllSites)]
-        public IActionResult GetAllSites()
+        [HttpGet(SiteAPIEnpoints.GetAll)]
+        public IActionResult GetAll()
         {
-            _logger.LogInformation("API Action: GetAllSites | Invoked: {InvokedAt}", DateTime.Now.ToString("HH:mm:ss.fff"));
+            _logger.LogInformation("API Action: GetAll | Invoked: {InvokedAt}", DateTime.Now.ToString("HH:mm:ss.fff"));
 
 
             const string cacheKey = "AllSites";
@@ -78,7 +78,7 @@ namespace BuilderLedger.API.Controllers
             List<Site> sites;
             if (!_cache.TryGetValue(cacheKey, out sites))
             {
-                sites = _siteRepository.GetAllSites();
+                sites = _siteRepository.GetAll();
                 var cacheEntryOptions = new MemoryCacheEntryOptions()
                     .SetSlidingExpiration(TimeSpan.FromMinutes(10));
                 _cache.Set(cacheKey, sites, cacheEntryOptions);
@@ -116,17 +116,17 @@ namespace BuilderLedger.API.Controllers
             return Ok(siteApiVm);
         }
 
-        [HttpGet(SiteAPIEnpoints.SelectSite)]
-        public IActionResult SelectSite(int id)
-        {
-            _logger.LogInformation("API Action: SelectSite | Invoked: {InvokedAt}", DateTime.Now.ToString("HH:mm:ss.fff"));
+        //[HttpGet(SiteAPIEnpoints.SelectSite)]
+        //public IActionResult SelectSite(int id)
+        //{
+        //    _logger.LogInformation("API Action: SelectSite | Invoked: {InvokedAt}", DateTime.Now.ToString("HH:mm:ss.fff"));
 
-            Site selectedSite = _siteRepository.GetSiteById(id);
-            if (selectedSite == null)
-                return NotFound("Site not found");
+        //    Site selectedSite = _siteRepository.GetSiteById(id);
+        //    if (selectedSite == null)
+        //        return NotFound("Site not found");
 
-            return Ok(selectedSite);
-        }
+        //    return Ok(selectedSite);
+        //}
 
 
         [HttpPost(SiteAPIEnpoints.Add)]
