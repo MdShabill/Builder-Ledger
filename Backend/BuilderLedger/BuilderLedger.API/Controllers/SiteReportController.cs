@@ -1,6 +1,6 @@
 using BuilderLedger.API.APIControllers.ApiEndpoints;
+using BuilderLedger.API.DTO;
 using BuilderLedger.API.Services;
-using BuilderLedger.API.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BuilderLedger.API.Controllers
@@ -17,14 +17,14 @@ namespace BuilderLedger.API.Controllers
         }
 
         [HttpPost(SiteReportAPIEnpoints.GeneratePdf)]
-        public async Task<IActionResult> GeneratePdf([FromBody] GeneratePdfRequest request)
+        public async Task<IActionResult> GeneratePdf([FromBody] GeneratePdfRequestDTO pdfRequestDto)
         {
-            if (request == null || string.IsNullOrWhiteSpace(request.Html))
+            if (pdfRequestDto == null || string.IsNullOrWhiteSpace(pdfRequestDto.Html))
                 return BadRequest("HTML content is required.");
 
-            var pdfBytes = await _pdfService.GeneratePdfAsync(request.Html);
+            var pdfBytes = await _pdfService.GeneratePdfAsync(pdfRequestDto.Html);
 
-            var fileName = string.IsNullOrWhiteSpace(request.FileName) ? "site-report.pdf" : request.FileName;
+            var fileName = string.IsNullOrWhiteSpace(pdfRequestDto.FileName) ? "site-report.pdf" : pdfRequestDto.FileName;
 
             if (!fileName.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase))
                 fileName += ".pdf";

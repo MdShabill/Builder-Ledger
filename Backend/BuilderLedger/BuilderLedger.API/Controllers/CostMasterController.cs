@@ -1,10 +1,10 @@
 using AutoMapper;
-using BuilderLedger.API.ViewModels;
 using BuilderLedger.Core.DataModels;
 using BuilderLedger.Repository.Interfaces;
 using BuilderLedger.API.APIControllers.ApiEndpoints;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.RegularExpressions;
+using BuilderLedger.API.DTO;
 
 namespace BuilderLedger.API.Controllers
 {
@@ -28,9 +28,9 @@ namespace BuilderLedger.API.Controllers
 
             MapperConfiguration configuration = new(cfg =>
             {
-                cfg.CreateMap<AddNewCostMasterVm, CostMaster>();
-                cfg.CreateMap<CostMaster, CostMasterVm>();
-                cfg.CreateMap<CostMaster, AddNewCostMasterVm>();
+                cfg.CreateMap<CostMasterDTO, CostMaster>();
+                cfg.CreateMap<CostMaster, CostMasterDTO>();
+                //cfg.CreateMap<CostMaster, CostMasterDTO>();
             });
 
             _imapper = configuration.CreateMapper();
@@ -55,7 +55,7 @@ namespace BuilderLedger.API.Controllers
 
             costMasters = _costMasterRepository.GetByServiceType(activeServiceTypeId, siteId);
 
-            var result = _imapper.Map<List<CostMasterVm>>(costMasters);
+            var result = _imapper.Map<List<CostMasterDTO>>(costMasters);
 
             return Ok(new
             {
@@ -82,7 +82,7 @@ namespace BuilderLedger.API.Controllers
             if (costMaster == null)
                 return NotFound(new { message = "No Active Cost Found" });
 
-            var result = _imapper.Map<CostMasterVm>(costMaster);
+            var result = _imapper.Map<CostMasterDTO>(costMaster);
             return Ok(result);
         }
 
@@ -98,28 +98,28 @@ namespace BuilderLedger.API.Controllers
             if (costMaster == null)
                 return NotFound(new { message = "Cost Master record not found for the current site." });
 
-            var result = _imapper.Map<AddNewCostMasterVm>(costMaster);
+            var result = _imapper.Map<CostMasterDTO>(costMaster);
             return Ok(result);
         }
 
         // POST /api/CostMasterAPI
         [HttpPost(CostMasterAPIEnpoints.Add)]
-        public IActionResult Add([FromBody] AddNewCostMasterVm costMasterVm)
+        public IActionResult Add([FromBody] CostMasterDTO costMasterDto)
         {
             int siteId = GetSiteId();
             if (siteId <= 0)
                 return BadRequest(new { message = "No site selected." });
 
-            if (costMasterVm == null)
+            if (costMasterDto == null)
                 return BadRequest(new { message = "Invalid Data" });
 
-            string validationMessage = ValidationDetail(costMasterVm);
+            string validationMessage = ValidationDetail(costMasterDto);
             if (!string.IsNullOrEmpty(validationMessage))
                 return BadRequest(new { message = validationMessage });
 
-            costMasterVm.SiteId = siteId;
+            costMasterDto.SiteId = siteId;
 
-            CostMaster costMaster = _imapper.Map<AddNewCostMasterVm, CostMaster>(costMasterVm);
+            CostMaster costMaster = _imapper.Map<CostMasterDTO, CostMaster>(costMasterDto);
             int affectedRowCount = _costMasterRepository.Create(costMaster);
 
             if (affectedRowCount > 0)
@@ -130,23 +130,23 @@ namespace BuilderLedger.API.Controllers
 
         // PUT /api/CostMasterAPI/5
         [HttpPut(CostMasterAPIEnpoints.Update)]
-        public IActionResult Update(int id, [FromBody] AddNewCostMasterVm costMasterVm)
+        public IActionResult Update(int id, [FromBody] CostMasterDTO costMasterDto)
         {
             int siteId = GetSiteId();
             if (siteId <= 0)
                 return BadRequest(new { message = "No site selected." });
 
-            if (costMasterVm == null)
+            if (costMasterDto == null)
                 return BadRequest(new { message = "Invalid Data" });
 
-            string validationMessage = ValidationDetail(costMasterVm);
+            string validationMessage = ValidationDetail(costMasterDto);
             if (!string.IsNullOrEmpty(validationMessage))
                 return BadRequest(new { message = validationMessage });
 
-            costMasterVm.Id = id;
-            costMasterVm.SiteId = siteId;
+            costMasterDto.Id = id;
+            costMasterDto.SiteId = siteId;
 
-            CostMaster costMaster = _imapper.Map<AddNewCostMasterVm, CostMaster>(costMasterVm);
+            CostMaster costMaster = _imapper.Map<CostMasterDTO, CostMaster>(costMasterDto);
             int affectedRowCount = _costMasterRepository.Update(costMaster);
 
             if (affectedRowCount > 0)
@@ -180,17 +180,17 @@ namespace BuilderLedger.API.Controllers
             return 0;
         }
 
-        private string ValidationDetail(AddNewCostMasterVm costMasterVm)
+        private string ValidationDetail(CostMasterDTO costMasterDto)
         {
-            if (costMasterVm.Date == null ||
-                costMasterVm.Date == default(DateTime) ||
-                costMasterVm.ServiceTypeId == 0)
+            if (costMasterDto.Date == null ||
+                costMasterDto.Date == default(DateTime) ||
+                costMasterDto.ServiceTypeId == 0)
             {
                 return "Page not submitted, please enter correct Inputs";
             }
 
-            if (costMasterVm.Cost == null || costMasterVm.Cost <= 0
-                || !Regex.IsMatch(costMasterVm.Cost.Value.ToString("0.##"), @"^\d+(\.\d{1,2})?$"))
+            if (costMasterDto.Cost == null || costMasterDto.Cost <= 0
+                || !Regex.IsMatch(costMasterDto.Cost.Value.ToString("0.##"), @"^\d+(\.\d{1,2})?$"))
             {
                 return "Cost must be a positive number with up to 2 decimal places and cannot contain alphabets or special characters.";
             }

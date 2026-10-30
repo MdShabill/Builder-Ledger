@@ -1,7 +1,7 @@
 // Path: ConstructEase.WebApp/APIControllers/DailyAttendanceAPIController.cs
 using AutoMapper;
 using BuilderLedger.API.APIControllers.ApiEndpoints;
-using BuilderLedger.API.ViewModels;
+using BuilderLedger.API.DTO;
 using BuilderLedger.Core.DataModels;
 using BuilderLedger.Repository.Interfaces;
 using Microsoft.AspNetCore.Mvc;
@@ -32,8 +32,8 @@ namespace BuilderLedger.API.Controllers
 
             MapperConfiguration configuration = new(cfg =>
             {
-                cfg.CreateMap<DailyAttendanceVm, DailyAttendance>();
-                cfg.CreateMap<DailyAttendance, DailyAttendanceVm>();
+                cfg.CreateMap<DailyAttendanceDTO, DailyAttendance>();
+                cfg.CreateMap<DailyAttendance, DailyAttendanceDTO>();
             });
             _imapper = configuration.CreateMapper();
         }
@@ -47,7 +47,7 @@ namespace BuilderLedger.API.Controllers
                 return BadRequest(new { message = "No site selected. Please select a site first." });
 
             List<DailyAttendance> dailyAttendances = _dailyAttendanceRepository.GetAll(siteId, dateFrom, dateTo);
-            var result = _imapper.Map<List<DailyAttendanceVm>>(dailyAttendances);
+            var result = _imapper.Map<List<DailyAttendanceDTO>>(dailyAttendances);
 
             return Ok(result);
         }
@@ -104,20 +104,20 @@ namespace BuilderLedger.API.Controllers
 
         // POST /api/DailyAttendanceAPI
         [HttpPost(DilyAttendanceAPIEnpoints.Add)]
-        public IActionResult Add([FromBody] DailyAttendanceVm dailyAttendanceVm)
+        public IActionResult Add([FromBody] DailyAttendanceDTO dailyAttendanceDto)
         {
             int siteId = GetSiteId();
             if (siteId <= 0)
                 return BadRequest(new { message = "No site selected." });
 
-            string validationMessage = ValidateDailyAttendance(dailyAttendanceVm);
+            string validationMessage = ValidateDailyAttendance(dailyAttendanceDto);
             if (validationMessage != null)
                 return BadRequest(new { message = validationMessage });
 
-            DailyAttendance dailyAttendance = _imapper.Map<DailyAttendanceVm, DailyAttendance>(dailyAttendanceVm);
+            DailyAttendance dailyAttendance = _imapper.Map<DailyAttendanceDTO, DailyAttendance>(dailyAttendanceDto);
             dailyAttendance.SiteId = siteId;
 
-            CostMaster costMaster = _costMasterRepository.GetActiveCostDetail(dailyAttendanceVm.ServiceTypeId, siteId);
+            CostMaster costMaster = _costMasterRepository.GetActiveCostDetail(dailyAttendanceDto.ServiceTypeId, siteId);
 
             if (costMaster == null)
                 return BadRequest(new { message = "No active CostMaster record found" });
@@ -133,19 +133,19 @@ namespace BuilderLedger.API.Controllers
             return StatusCode(500, new { message = "Failed to insert record" });
         }
 
-        private string ValidateDailyAttendance(DailyAttendanceVm vm)
+        private string ValidateDailyAttendance(DailyAttendanceDTO dailyAttendanceDto)
         {
-            if (vm.ServiceTypeId == 0)
+            if (dailyAttendanceDto.ServiceTypeId == 0)
                 return "Please select a Job Category.";
 
-            if (vm.TotalWorker <= 0)
+            if (dailyAttendanceDto.TotalWorker <= 0)
                 return "Please enter a valid number of Total Workers.";
 
-            if (vm.Date > DateTime.Now)
+            if (dailyAttendanceDto.Date > DateTime.Now)
                 return "Date cannot be in the future.";
 
             string totalWorkerPattern = @"^\d+$";
-            if (!Regex.IsMatch(vm.TotalWorker.ToString(), totalWorkerPattern))
+            if (!Regex.IsMatch(dailyAttendanceDto.TotalWorker.ToString(), totalWorkerPattern))
                 return "Total Worker must be a valid positive number and cannot contain any special characters or alphabets.";
 
             return null;

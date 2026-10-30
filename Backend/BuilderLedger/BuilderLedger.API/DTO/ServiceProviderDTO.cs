@@ -1,9 +1,9 @@
 using BuilderLedger.Core.Enums;
 using System.Text.Json.Serialization;
 
-namespace BuilderLedger.API.ViewModels
+namespace BuilderLedger.API.DTO
 {
-    public class ServiceProviderVm
+    public class ServiceProviderDTO
     {
         public int ServiceProviderId { get; set; }
         public string? ServiceProviderName { get; set; }

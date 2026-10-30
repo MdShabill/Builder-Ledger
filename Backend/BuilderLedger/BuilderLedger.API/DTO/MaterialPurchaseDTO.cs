@@ -1,6 +1,6 @@
-namespace BuilderLedger.API.ViewModels
+namespace BuilderLedger.API.DTO
 {
-    public class MaterialPurchaseVm
+    public class MaterialPurchaseDTO
     {
         public int Id { get; set; }
         public int MaterialId { get; set; }

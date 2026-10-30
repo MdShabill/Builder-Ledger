@@ -1,6 +1,6 @@
-namespace BuilderLedger.API.ViewModels
+namespace BuilderLedger.API.DTO
 {
-    public class DailyAttendanceVm
+    public class DailyAttendanceDTO
     {
         public int Id { get; set; }
         public DateTime Date { get; set; }

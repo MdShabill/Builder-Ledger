@@ -1,7 +1,7 @@
 // Path: ConstructEase.WebApp/APIControllers/MaterialPurchaseAPIController.cs
 using AutoMapper;
 using BuilderLedger.API.APIControllers.ApiEndpoints;
-using BuilderLedger.API.ViewModels;
+using BuilderLedger.API.DTO;
 using BuilderLedger.Core.DataModels;
 using BuilderLedger.Repository.Interfaces;
 using Microsoft.AspNetCore.Mvc;
@@ -32,22 +32,24 @@ namespace BuilderLedger.API.Controllers
 
             var config = new MapperConfiguration(cfg =>
             {
-                cfg.CreateMap<MaterialPurchaseVm, MaterialPurchase>();
-                cfg.CreateMap<MaterialPurchase, MaterialPurchaseVm>();
+                cfg.CreateMap<MaterialPurchaseDTO, MaterialPurchase>();
+                cfg.CreateMap<MaterialPurchase, MaterialPurchaseDTO>();
             });
             _imapper = config.CreateMapper();
         }
 
         [HttpGet(MaterialPurchaseAPIEnpoints.Index)]
-        public IActionResult Index(DateTime? dateFrom, DateTime? dateTo, int? materialId, int? supplierId, int? brandId)
+        public IActionResult Index(DateTime? dateFrom, DateTime? dateTo, int? materialId,
+                                   int? supplierId, int? brandId)
         {
             int siteId = GetSiteId();
             if (siteId <= 0)
                 return BadRequest(new { message = "No site selected." });
 
-            List<MaterialPurchase> list = _materialPurchaseRepository.GetAll(siteId, dateFrom, dateTo, materialId, supplierId, brandId);
+            List<MaterialPurchase> list = _materialPurchaseRepository.GetAll
+                                   (siteId, dateFrom, dateTo, materialId, supplierId, brandId);
 
-            var result = _imapper.Map<List<MaterialPurchaseVm>>(list);
+            var result = _imapper.Map<List<MaterialPurchaseDTO>>(list);
 
             return Ok(new { items = result, totalCount = result.Count });
         }
@@ -83,17 +85,17 @@ namespace BuilderLedger.API.Controllers
         }
 
         [HttpPost(MaterialPurchaseAPIEnpoints.Add)]
-        public IActionResult Add([FromBody] MaterialPurchaseVm vm)
+        public IActionResult Add([FromBody] MaterialPurchaseDTO Dto)
         {
             int siteId = GetSiteId();
             if (siteId <= 0)
                 return BadRequest(new { message = "No site selected." });
 
-            string error = Validate(vm);
+            string error = Validate(Dto);
             if (error != null)
                 return BadRequest(new { message = error });
 
-            var entity = _imapper.Map<MaterialPurchase>(vm);
+            var entity = _imapper.Map<MaterialPurchase>(Dto);
             entity.SiteId = siteId;
 
             int rows = _materialPurchaseRepository.Create(entity);
@@ -113,7 +115,7 @@ namespace BuilderLedger.API.Controllers
             return Ok(new { message = "Your Data Has Been Deleted successfully." });
         }
 
-        private string Validate(MaterialPurchaseVm vm)
+        private string Validate(MaterialPurchaseDTO vm)
         {
             if (vm.MaterialId <= 0 || vm.SupplierId <= 0 || vm.BrandId <= 0
                 || vm.Quantity <= 0 || string.IsNullOrEmpty(vm.UnitOfMeasure)

@@ -1,6 +1,6 @@
-namespace BuilderLedger.API.ViewModels
+namespace BuilderLedger.API.DTO
 {
-    public class GeneratePdfRequest
+    public class GeneratePdfRequestDTO
     {
         public string Html { get; set; } = string.Empty;
 

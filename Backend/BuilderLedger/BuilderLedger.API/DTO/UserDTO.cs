@@ -1,8 +1,6 @@
-using System.Diagnostics.CodeAnalysis;
-
-namespace BuilderLedger.API.ViewModels
+namespace BuilderLedger.API.DTO
 {
-    public class UserVm
+    public class UserDTO
     {
         public string Email { get; set; }
         public string Password { get; set; }

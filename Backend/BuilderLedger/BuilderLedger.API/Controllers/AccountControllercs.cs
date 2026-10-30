@@ -1,6 +1,6 @@
 using AutoMapper;
 using BuilderLedger.API.APIControllers.ApiEndpoints;
-using BuilderLedger.API.ViewModels;
+using BuilderLedger.API.DTO;
 using BuilderLedger.Core.DataModels;
 using BuilderLedger.Repository.Interfaces;
 using Microsoft.AspNetCore.Mvc;
@@ -22,7 +22,7 @@ namespace BuilderLedger.API.Controllers
 
             var configuration = new MapperConfiguration(cfg =>
             {
-                cfg.CreateMap<User, UserVm>();
+                cfg.CreateMap<User, UserDTO>();
             });
 
             _imapper = configuration.CreateMapper();
@@ -30,36 +30,36 @@ namespace BuilderLedger.API.Controllers
 
 
         [HttpPost(AccountAPIEndpoints.Login)]
-        public IActionResult Login(UserVm userVm)
+        public IActionResult Login(UserDTO userDto)
         {
             _logger.LogInformation("API Action: Login | Invoked: {Time}", DateTime.Now.ToString("HH:mm:ss.fff"));
 
-            if (userVm == null || string.IsNullOrWhiteSpace(userVm.Email)
-                || string.IsNullOrWhiteSpace(userVm.Password))
+            if (userDto == null || string.IsNullOrWhiteSpace(userDto.Email)
+                || string.IsNullOrWhiteSpace(userDto.Password))
                 return BadRequest("Email and password are required.");
 
-            User user = _userRepository.GetUserDetailByEmail(userVm.Email);
+            User user = _userRepository.GetUserDetailByEmail(userDto.Email);
             if (user == null)
                 return Unauthorized("Invalid Email Or Password.");
 
             if (user.IsLocked)
                 return StatusCode(StatusCodes.Status423Locked, "Your account has been locked. Kindly contact the administrator.");
 
-            if (user.Password != userVm.Password)
+            if (user.Password != userDto.Password)
             {
-                _userRepository.UpdateOnLoginFailed(userVm.Email);
+                _userRepository.UpdateOnLoginFailed(userDto.Email);
 
                 if (user.LoginFailedCount >= 2)
                 {
-                    _userRepository.UpdateIsLocked(userVm.Email, true);
+                    _userRepository.UpdateIsLocked(userDto.Email, true);
 
                     return StatusCode(StatusCodes.Status423Locked, "Your account has been locked. Kindly contact the administrator.");
                 }
                 return Unauthorized("Invalid Email Or Password.");
             }
-            _userRepository.UpdateOnLoginSuccessful(userVm.Email);
+            _userRepository.UpdateOnLoginSuccessful(userDto.Email);
 
-            return Ok(new UserVm { FullName = user.Name, Email = user.Email });
+            return Ok(new UserDTO { FullName = user.Name, Email = user.Email });
         }
     }
 }

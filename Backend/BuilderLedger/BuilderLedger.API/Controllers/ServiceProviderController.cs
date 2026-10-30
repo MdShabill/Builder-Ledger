@@ -1,6 +1,6 @@
 using AutoMapper;
 using BuilderLedger.API.APIControllers.ApiEndpoints;
-using BuilderLedger.API.ViewModels;
+using BuilderLedger.API.DTO;
 using BuilderLedger.Core.DataModels;
 using BuilderLedger.Repository.Interfaces;
 using Microsoft.AspNetCore.Mvc;
@@ -38,8 +38,8 @@ namespace BuilderLedger.API.Controllers
 
             var config = new MapperConfiguration(cfg =>
             {
-                cfg.CreateMap<ServiceProviderVm, Core.DataModels.ServiceProvider>();
-                cfg.CreateMap<Core.DataModels.ServiceProvider, ServiceProviderVm>();
+                cfg.CreateMap<ServiceProviderDTO, Core.DataModels.ServiceProvider>();
+                cfg.CreateMap<Core.DataModels.ServiceProvider, ServiceProviderDTO>();
             });
 
             _imapper = config.CreateMapper();
@@ -50,9 +50,9 @@ namespace BuilderLedger.API.Controllers
         {
             List<Core.DataModels.ServiceProvider> serviceProviders =
             _serviceProviderRepository.GetAll(serviceTypeId, id);
-            var serviceProviderVm = _imapper.Map<List<Core.DataModels.ServiceProvider>,
-            List<ServiceProviderVm>>(serviceProviders);
-            return Ok(new { items = serviceProviderVm, totalCount = serviceProviderVm.Count });
+            var serviceProviderDto = _imapper.Map<List<Core.DataModels.ServiceProvider>,
+            List<ServiceProviderDTO>>(serviceProviders);
+            return Ok(new { items = serviceProviderDto, totalCount = serviceProviderDto.Count });
         }
 
         [HttpGet(ServiceProviderAPIEnpoints.GetById)]
@@ -62,25 +62,25 @@ namespace BuilderLedger.API.Controllers
             if (serviceProviders.Count == 0)
                 return NotFound(new { message = "Service Provider not found" });
 
-            var serviceProviderVm = _imapper.Map<ServiceProviderVm>(serviceProviders.First());
-            return Ok(serviceProviderVm);
+            var serviceProviderDto = _imapper.Map<ServiceProviderDTO>(serviceProviders.First());
+            return Ok(serviceProviderDto);
         }
 
         [HttpPost(ServiceProviderAPIEnpoints.Add)]
-        public IActionResult Add([FromBody] ServiceProviderVm serviceProviderVm)
+        public IActionResult Add([FromBody] ServiceProviderDTO serviceProviderDto)
         {
-            string error = Validate(serviceProviderVm);
+            string error = Validate(serviceProviderDto);
             if (error != null)
                 return BadRequest(new { message = error });
 
             Core.DataModels.ServiceProvider serviceProvider =
-                _imapper.Map<ServiceProviderVm, Core.DataModels.ServiceProvider>(serviceProviderVm);
+                _imapper.Map<ServiceProviderDTO, Core.DataModels.ServiceProvider>(serviceProviderDto);
 
             serviceProvider.ServiceProviderId = _serviceProviderRepository.Add(serviceProvider);
 
             if (serviceProvider.ServiceProviderId > 0)
             {
-                AddAddressIfPresent(serviceProvider.ServiceProviderId, serviceProviderVm);
+                AddAddressIfPresent(serviceProvider.ServiceProviderId, serviceProviderDto);
                 return Ok(new { message = "Your ServiceProvider Data Added successfully." });
             }
 
@@ -88,21 +88,21 @@ namespace BuilderLedger.API.Controllers
         }
 
         [HttpPut(ServiceProviderAPIEnpoints.Update)]
-        public IActionResult Update(int id, [FromBody] ServiceProviderVm serviceProviderVm)
+        public IActionResult Update(int id, [FromBody] ServiceProviderDTO serviceProviderDto)
         {
-            string error = Validate(serviceProviderVm);
+            string error = Validate(serviceProviderDto);
             if (error != null)
                 return BadRequest(new { message = error });
 
-            serviceProviderVm.ServiceProviderId = id;
+            serviceProviderDto.ServiceProviderId = id;
 
             Core.DataModels.ServiceProvider serviceProvider =
-                _imapper.Map<ServiceProviderVm, Core.DataModels.ServiceProvider>(serviceProviderVm);
+                _imapper.Map<ServiceProviderDTO, Core.DataModels.ServiceProvider>(serviceProviderDto);
 
             int affectedRowCount = _serviceProviderRepository.Update(serviceProvider);
             if (affectedRowCount > 0)
             {
-                AddAddressIfPresent(id, serviceProviderVm);
+                AddAddressIfPresent(id, serviceProviderDto);
                 return Ok(new { message = "Your Data updated successfully." });
             }
             return BadRequest(new { message = "Update failed." });
@@ -142,20 +142,20 @@ namespace BuilderLedger.API.Controllers
             });
         }
 
-        private void AddAddressIfPresent(int serviceProviderId, ServiceProviderVm serviceProviderVm)
+        private void AddAddressIfPresent(int serviceProviderId, ServiceProviderDTO serviceProviderDto)
         {
-            if (!string.IsNullOrEmpty(serviceProviderVm.AddressLine1) ||
-                serviceProviderVm.AddressTypeId.HasValue && serviceProviderVm.AddressTypeId > 0 ||
-                serviceProviderVm.CountryId.HasValue && serviceProviderVm.CountryId > 0 ||
-                serviceProviderVm.PinCode.HasValue && serviceProviderVm.PinCode > 0)
+            if (!string.IsNullOrEmpty(serviceProviderDto.AddressLine1) ||
+                serviceProviderDto.AddressTypeId.HasValue && serviceProviderDto.AddressTypeId > 0 ||
+                serviceProviderDto.CountryId.HasValue && serviceProviderDto.CountryId > 0 ||
+                serviceProviderDto.PinCode.HasValue && serviceProviderDto.PinCode > 0)
             {
                 var address = new Address(
                     serviceProviderId,
-                    serviceProviderVm.AddressLine1,
-                    serviceProviderVm.AddressTypeId ?? 0,
-                    serviceProviderVm.CountryId ?? 0,
-                    serviceProviderVm.PinCode ?? 0,
-                    serviceProviderVm.SiteId
+                    serviceProviderDto.AddressLine1,
+                    serviceProviderDto.AddressTypeId ?? 0,
+                    serviceProviderDto.CountryId ?? 0,
+                    serviceProviderDto.PinCode ?? 0,
+                    serviceProviderDto.SiteId
                 );
                 _addressRepository.Upsert(address);
             }
@@ -163,30 +163,30 @@ namespace BuilderLedger.API.Controllers
                 _addressRepository.Delete(serviceProviderId, null);
         }
 
-        private string Validate(ServiceProviderVm serviceProviderVm)
+        private string Validate(ServiceProviderDTO serviceProviderDto)
         {
-            if (string.IsNullOrEmpty(serviceProviderVm.ServiceProviderName))
+            if (string.IsNullOrEmpty(serviceProviderDto.ServiceProviderName))
                 return "Service Provider Name is required.";
 
-            if (serviceProviderVm.ServiceProviderName.Length > 15 || serviceProviderVm.ServiceProviderName.Length < 4 ||
-                !Regex.IsMatch(serviceProviderVm.ServiceProviderName, @"^[a-zA-Z\s]+$"))
+            if (serviceProviderDto.ServiceProviderName.Length > 15 || serviceProviderDto.ServiceProviderName.Length < 4 ||
+                !Regex.IsMatch(serviceProviderDto.ServiceProviderName, @"^[a-zA-Z\s]+$"))
                 return "Service Provider Name must be between 4 to 15 characters and contain only alphabets.";
 
-            if (serviceProviderVm.DOB == null || serviceProviderVm.DOB > DateTime.Now)
+            if (serviceProviderDto.DOB == null || serviceProviderDto.DOB > DateTime.Now)
                 return "Date Of Birth cannot be null or in the future.";
 
-            if (string.IsNullOrEmpty(serviceProviderVm.MobileNumber) || serviceProviderVm.MobileNumber.Length != 10 ||
-                !Regex.IsMatch(serviceProviderVm.MobileNumber, @"^\d{10}$"))
+            if (string.IsNullOrEmpty(serviceProviderDto.MobileNumber) || serviceProviderDto.MobileNumber.Length != 10 ||
+                !Regex.IsMatch(serviceProviderDto.MobileNumber, @"^\d{10}$"))
                 return "Mobile Number must be numeric and exactly 10 digits long.";
 
-            if (string.IsNullOrEmpty(serviceProviderVm.ReferredBy))
+            if (string.IsNullOrEmpty(serviceProviderDto.ReferredBy))
                 return "Referred name is required.";
 
-            if (serviceProviderVm.ReferredBy.Length > 15 || serviceProviderVm.ReferredBy.Length < 3 ||
-                !Regex.IsMatch(serviceProviderVm.ReferredBy, @"^[a-zA-Z\s]+$"))
+            if (serviceProviderDto.ReferredBy.Length > 15 || serviceProviderDto.ReferredBy.Length < 3 ||
+                !Regex.IsMatch(serviceProviderDto.ReferredBy, @"^[a-zA-Z\s]+$"))
                 return "Referred name must be between 3 to 15 characters and contain only alphabets.";
 
-            if (serviceProviderVm.ServiceTypeId == 0)
+            if (serviceProviderDto.ServiceTypeId == 0)
                 return "Job Category is required.";
 
             return null;

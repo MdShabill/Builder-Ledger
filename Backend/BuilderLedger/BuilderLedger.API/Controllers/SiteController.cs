@@ -1,6 +1,6 @@
 using AutoMapper;
 using BuilderLedger.API.APIControllers.ApiEndpoints;
-using BuilderLedger.API.Controllers.APIViewModels;
+using BuilderLedger.API.DTO;
 using BuilderLedger.API.Services;
 using BuilderLedger.Core.DataModels;
 using BuilderLedger.Core.Enums;
@@ -61,9 +61,9 @@ namespace BuilderLedger.API.Controllers
 
             MapperConfiguration configuration = new(cfg =>
             {
-                cfg.CreateMap<Site, SiteAPIDTO>();
-                cfg.CreateMap<SiteAPIDTO, Site>();
-                cfg.CreateMap<Site, SiteAPIVm>();
+                cfg.CreateMap<Site, SiteDTO>();
+                cfg.CreateMap<SiteDTO, Site>();
+                cfg.CreateMap<Site, SiteDTO>();
             });
             _imapper = configuration.CreateMapper();
         }
@@ -84,11 +84,11 @@ namespace BuilderLedger.API.Controllers
                     .SetSlidingExpiration(TimeSpan.FromMinutes(10));
                 _cache.Set(cacheKey, sites, cacheEntryOptions);
             }
-            var siteApiVm = _imapper.Map<List<Site>, List<SiteAPIDTO>>(sites);
+            var siteDto = _imapper.Map<List<Site>, List<SiteDTO>>(sites);
 
             _logger.LogInformation("\nTotal Site: {TotalSite}", sites?.Count ?? 0);
 
-            return Ok(siteApiVm);
+            return Ok(siteDto);
         }
 
         // GET api/Site/filter?search=&statusId=&fromDate=&toDate=&budgetFrom=&budgetTo=
@@ -111,56 +111,56 @@ namespace BuilderLedger.API.Controllers
                 return BadRequest("Budget From cannot be greater than Budget To.");
 
             List<Site> sites = _siteRepository.GetSites(search, statusId, fromDate, toDate, budgetFrom, budgetTo);
-            var siteApiDto = _imapper.Map<List<Site>, List<SiteAPIDTO>>(sites);
+            var siteDto = _imapper.Map<List<Site>, List<SiteDTO>>(sites);
 
             _logger.LogInformation("\nTotal Site: {TotalSite}", sites?.Count ?? 0);
 
-            return Ok(siteApiDto);
+            return Ok(siteDto);
         }
 
         // POST api/Site
         [HttpPost(SiteAPIEnpoints.Add)]
-        public IActionResult Add(SiteAPIDTO siteApiDto)
+        public IActionResult Add(SiteDTO siteDto)
         {
             _logger.LogInformation("API Action: Add | Started: {StartedAt}", DateTime.Now.ToString("HH:mm:ss.fff"));
 
-            if (siteApiDto == null)
+            if (siteDto == null)
                 return BadRequest("Invalid data");
 
-            Site site = _imapper.Map<SiteAPIDTO, Site>(siteApiDto);
+            Site site = _imapper.Map<SiteDTO, Site>(siteDto);
             site.Id = _siteRepository.Create(site);
 
             if (site.Id <= 0)
                 return StatusCode(500, "Failed to create site");
 
-            AddAddressIfPresent(site.Id, siteApiDto);
+            AddAddressIfPresent(site.Id, siteDto);
 
-            if (siteApiDto.SelectedMasterMasonIds?.Count > 0)
-                _siteRepository.AddAOrUpdateSiteServiceProviderBridge(site.Id, ServiceTypes.MasterMasion, siteApiDto.SelectedMasterMasonIds);
+            if (siteDto.SelectedMasterMasonIds?.Count > 0)
+                _siteRepository.AddAOrUpdateSiteServiceProviderBridge(site.Id, ServiceTypes.MasterMasion, siteDto.SelectedMasterMasonIds);
 
-            if (siteApiDto.SelectedElectricianIds?.Count > 0)
-                _siteRepository.AddAOrUpdateSiteServiceProviderBridge(site.Id, ServiceTypes.Electrician, siteApiDto.SelectedElectricianIds);
+            if (siteDto.SelectedElectricianIds?.Count > 0)
+                _siteRepository.AddAOrUpdateSiteServiceProviderBridge(site.Id, ServiceTypes.Electrician, siteDto.SelectedElectricianIds);
 
-            if (siteApiDto.SelectedLabourIds?.Count > 0)
-                _siteRepository.AddAOrUpdateSiteServiceProviderBridge(site.Id, ServiceTypes.Labour, siteApiDto.SelectedLabourIds);
+            if (siteDto.SelectedLabourIds?.Count > 0)
+                _siteRepository.AddAOrUpdateSiteServiceProviderBridge(site.Id, ServiceTypes.Labour, siteDto.SelectedLabourIds);
 
-            if (siteApiDto.SelectedPlumberIds?.Count > 0)
-                _siteRepository.AddAOrUpdateSiteServiceProviderBridge(site.Id, ServiceTypes.Plumber, siteApiDto.SelectedPlumberIds);
+            if (siteDto.SelectedPlumberIds?.Count > 0)
+                _siteRepository.AddAOrUpdateSiteServiceProviderBridge(site.Id, ServiceTypes.Plumber, siteDto.SelectedPlumberIds);
 
-            if (siteApiDto.SelectedPainterIds?.Count > 0)
-                _siteRepository.AddAOrUpdateSiteServiceProviderBridge(site.Id, ServiceTypes.Painter, siteApiDto.SelectedPainterIds);
+            if (siteDto.SelectedPainterIds?.Count > 0)
+                _siteRepository.AddAOrUpdateSiteServiceProviderBridge(site.Id, ServiceTypes.Painter, siteDto.SelectedPainterIds);
 
-            if (siteApiDto.SelectedCarpenterIds?.Count > 0)
-                _siteRepository.AddAOrUpdateSiteServiceProviderBridge(site.Id, ServiceTypes.Carpenter, siteApiDto.SelectedCarpenterIds);
+            if (siteDto.SelectedCarpenterIds?.Count > 0)
+                _siteRepository.AddAOrUpdateSiteServiceProviderBridge(site.Id, ServiceTypes.Carpenter, siteDto.SelectedCarpenterIds);
 
-            if (siteApiDto.SelectedTilerIds?.Count > 0)
-                _siteRepository.AddAOrUpdateSiteServiceProviderBridge(site.Id, ServiceTypes.Tiler, siteApiDto.SelectedTilerIds);
+            if (siteDto.SelectedTilerIds?.Count > 0)
+                _siteRepository.AddAOrUpdateSiteServiceProviderBridge(site.Id, ServiceTypes.Tiler, siteDto.SelectedTilerIds);
 
-            if (siteApiDto.SelectedScopes?.Count > 0)
+            if (siteDto.SelectedScopes?.Count > 0)
             {
                 List<(int, int, string?)> mappedScopes = new();
 
-                foreach (ScopeSaveItem scope in siteApiDto.SelectedScopes)
+                foreach (SiteScopeDTO scope in siteDto.SelectedScopes)
                 {
                     mappedScopes.Add((scope.SiteScopeMasterId, scope.ScopeStatusId, scope.Remarks));
                 }
@@ -170,7 +170,7 @@ namespace BuilderLedger.API.Controllers
             string addedByName = User?.Identity?.Name ?? "System";
 
             // Start email processing without waiting for SMTP to finish.
-            _ = SiteAddedNotification(site, siteApiDto, addedByName);
+            _ = SiteAddedNotification(site, siteDto, addedByName);
 
             // Return the site-save response without waiting for email delivery.
             return Ok(new
@@ -192,21 +192,21 @@ namespace BuilderLedger.API.Controllers
             if (selectedSite == null)
                 return NotFound("Site not found");
 
-            SiteAPIVm siteApiVm = _imapper.Map<Site, SiteAPIVm>(selectedSite);
-            siteApiVm.MasterMasonIds = _siteRepository.GetServiceProviderIdsByTypes(id, new List<ServiceTypes> { ServiceTypes.MasterMasion });
-            siteApiVm.ElectricianIds = _siteRepository.GetServiceProviderIdsByTypes(id, new List<ServiceTypes> { ServiceTypes.Electrician });
-            siteApiVm.LabourIds = _siteRepository.GetServiceProviderIdsByTypes(id, new List<ServiceTypes> { ServiceTypes.Labour });
-            siteApiVm.PlumberIds = _siteRepository.GetServiceProviderIdsByTypes(id, new List<ServiceTypes> { ServiceTypes.Plumber });
-            siteApiVm.PainterIds = _siteRepository.GetServiceProviderIdsByTypes(id, new List<ServiceTypes> { ServiceTypes.Painter });
-            siteApiVm.CarpenterIds = _siteRepository.GetServiceProviderIdsByTypes(id, new List<ServiceTypes> { ServiceTypes.Carpenter });
-            siteApiVm.TilerIds = _siteRepository.GetServiceProviderIdsByTypes(id, new List<ServiceTypes> { ServiceTypes.Tiler });
+            SiteDTO siteDto = _imapper.Map<Site, SiteDTO>(selectedSite);
+            siteDto.SelectedMasterMasonIds = _siteRepository.GetServiceProviderIdsByTypes(id, new List<ServiceTypes> { ServiceTypes.MasterMasion });
+            siteDto.SelectedElectricianIds = _siteRepository.GetServiceProviderIdsByTypes(id, new List<ServiceTypes> { ServiceTypes.Electrician });
+            siteDto.SelectedLabourIds = _siteRepository.GetServiceProviderIdsByTypes(id, new List<ServiceTypes> { ServiceTypes.Labour });
+            siteDto.SelectedPlumberIds = _siteRepository.GetServiceProviderIdsByTypes(id, new List<ServiceTypes> { ServiceTypes.Plumber });
+            siteDto.SelectedPainterIds = _siteRepository.GetServiceProviderIdsByTypes(id, new List<ServiceTypes> { ServiceTypes.Painter });
+            siteDto.SelectedCarpenterIds = _siteRepository.GetServiceProviderIdsByTypes(id, new List<ServiceTypes> { ServiceTypes.Carpenter });
+            siteDto.SelectedTilerIds = _siteRepository.GetServiceProviderIdsByTypes(id, new List<ServiceTypes> { ServiceTypes.Tiler });
 
             List<SiteScope> scopes = _siteScopeRepository.Get(id);
-            siteApiVm.Scopes = new List<SiteScopeVm>();
+            siteDto.Scopes = new List<SiteScopeDTO>();
 
             foreach (SiteScope scope in scopes)
             {
-                SiteScopeVm scopeVm = new()
+                SiteScopeDTO scopeVm = new()
                 {
                     Id = scope.Id,
                     SiteScopeMasterId = scope.SiteScopeId,
@@ -216,22 +216,22 @@ namespace BuilderLedger.API.Controllers
                     Remarks = scope.Remarks,
                     CompletedDate = scope.CompletedDate
                 };
-                siteApiVm.Scopes.Add(scopeVm);
+                siteDto.Scopes.Add(scopeVm);
             }
-            return Ok(siteApiVm);
+            return Ok(siteDto);
         }
 
         // PUT api/Site/2
         [HttpPut(SiteAPIEnpoints.Update)]
-        public async Task<IActionResult> Update(int id, [FromBody] SiteAPIDTO siteApiDto)
+        public async Task<IActionResult> Update(int id, [FromBody] SiteDTO siteDto)
         {
             _logger.LogInformation("API Action: Update | Invoked: {InvokedAt}", DateTime.Now.ToString("HH:mm:ss.fff"));
  
-            if (siteApiDto == null || id <= 0)
+            if (siteDto == null || id <= 0)
                 return BadRequest("Invalid site data.");
  
             // The id in the URL is the source of truth.
-            siteApiDto.Id = id;
+            siteDto.Id = id;
  
             Site oldSite = _siteRepository.GetSiteById(id);
  
@@ -240,29 +240,29 @@ namespace BuilderLedger.API.Controllers
  
             List<SiteScope> oldScopes = _siteScopeRepository.Get(id);
  
-            Site site = _imapper.Map<SiteAPIDTO, Site>(siteApiDto);
+            Site site = _imapper.Map<SiteDTO, Site>(siteDto);
             int affectedRows = _siteRepository.Update(site);
  
             if (affectedRows <= 0)
                 return StatusCode(500, "Site update failed.");
  
             // Save address.
-            AddAddressIfPresent(site.Id, siteApiDto);
+            AddAddressIfPresent(site.Id, siteDto);
  
             // Save service provider assignments.
-            _siteRepository.AddAOrUpdateSiteServiceProviderBridge(site.Id, ServiceTypes.MasterMasion, siteApiDto.SelectedMasterMasonIds ?? new List<int>());
-            _siteRepository.AddAOrUpdateSiteServiceProviderBridge(site.Id, ServiceTypes.Electrician, siteApiDto.SelectedElectricianIds ?? new List<int>());
-            _siteRepository.AddAOrUpdateSiteServiceProviderBridge(site.Id, ServiceTypes.Labour, siteApiDto.SelectedLabourIds ?? new List<int>());
-            _siteRepository.AddAOrUpdateSiteServiceProviderBridge(site.Id, ServiceTypes.Plumber, siteApiDto.SelectedPlumberIds ?? new List<int>());
-            _siteRepository.AddAOrUpdateSiteServiceProviderBridge(site.Id, ServiceTypes.Painter, siteApiDto.SelectedPainterIds ?? new List<int>());
-            _siteRepository.AddAOrUpdateSiteServiceProviderBridge(site.Id, ServiceTypes.Carpenter, siteApiDto.SelectedCarpenterIds ?? new List<int>());
-            _siteRepository.AddAOrUpdateSiteServiceProviderBridge(site.Id, ServiceTypes.Tiler, siteApiDto.SelectedTilerIds ?? new List<int>());
+            _siteRepository.AddAOrUpdateSiteServiceProviderBridge(site.Id, ServiceTypes.MasterMasion, siteDto.SelectedMasterMasonIds ?? new List<int>());
+            _siteRepository.AddAOrUpdateSiteServiceProviderBridge(site.Id, ServiceTypes.Electrician, siteDto.SelectedElectricianIds ?? new List<int>());
+            _siteRepository.AddAOrUpdateSiteServiceProviderBridge(site.Id, ServiceTypes.Labour, siteDto.SelectedLabourIds ?? new List<int>());
+            _siteRepository.AddAOrUpdateSiteServiceProviderBridge(site.Id, ServiceTypes.Plumber, siteDto.SelectedPlumberIds ?? new List<int>());
+            _siteRepository.AddAOrUpdateSiteServiceProviderBridge(site.Id, ServiceTypes.Painter, siteDto.SelectedPainterIds ?? new List<int>());
+            _siteRepository.AddAOrUpdateSiteServiceProviderBridge(site.Id, ServiceTypes.Carpenter, siteDto.SelectedCarpenterIds ?? new List<int>());
+            _siteRepository.AddAOrUpdateSiteServiceProviderBridge(site.Id, ServiceTypes.Tiler, siteDto.SelectedTilerIds ?? new List<int>());
  
             // Save selected work scopes.
             List<(int, int, string?)> mappedScopes = new();
-            List<ScopeSaveItem> selectedScopes = siteApiDto.SelectedScopes ?? new();
+            List<SiteScopeDTO> selectedScopes = siteDto.SelectedScopes ?? new();
  
-            foreach (ScopeSaveItem scope in selectedScopes)
+            foreach (SiteScopeDTO scope in selectedScopes)
             {
                 mappedScopes.Add((scope.SiteScopeMasterId, scope.ScopeStatusId, scope.Remarks));
             }
@@ -273,7 +273,7 @@ namespace BuilderLedger.API.Controllers
             _cache.Remove("AllSites");
  
             // Compare old and new data and send notification email.
-            bool emailSent = await SendSiteUpdateEmail(siteApiDto, oldSite, oldScopes);
+            bool emailSent = await SendSiteUpdateEmail(siteDto, oldSite, oldScopes);
  
             _logger.LogInformation("Site {SiteId} updated. Email sent: {EmailSent}", site.Id, emailSent);
  
@@ -320,30 +320,27 @@ namespace BuilderLedger.API.Controllers
         {
             _logger.LogInformation("API Action: GetDropdownData | Invoked: {InvokedAt}", DateTime.Now.ToString("HH:mm:ss.fff"));
 
-            List<SiteStatus> statuses;
-            if (siteStatusData)
+            SiteMasterDataDTO response = new();
+
+            if (siteStatusData == true)
             {
-                statuses = _siteStatusRepository.GetAll();
-                List<SiteDropdownDTO> statusItems = new();
+                List<SiteStatus> statuses = _siteStatusRepository.GetAll();
                 foreach (SiteStatus status in statuses)
                 {
-                    statusItems.Add(new SiteDropdownDTO
+                    response.Statuses.Add(new MasterDataDTO
                     {
                         Id = status.Id,
                         Name = status.Status
                     });
                 }
-
             }
 
-            List<AddressType> addressTypes;
-            if (addressTypeData)
+            if (addressTypeData == true)
             {
-                addressTypes = _addressTypeRepository.GetAll();
-                List<SiteDropdownDTO> addressTypeItems = new();
+                List<AddressType> addressTypes = _addressTypeRepository.GetAll();
                 foreach (AddressType addressType in addressTypes)
                 {
-                    addressTypeItems.Add(new SiteDropdownDTO
+                    response.AddressTypes.Add(new MasterDataDTO
                     {
                         Id = addressType.Id,
                         Name = addressType.Name
@@ -351,14 +348,12 @@ namespace BuilderLedger.API.Controllers
                 }
             }
 
-            List<Country> countries;
-            if(countriesData)
+            if (countriesData == true)
             {
-                countries = _countryRepository.GetAllCountries();
-                List<SiteDropdownDTO> countryItems = new();
+                List<Country> countries = _countryRepository.GetAllCountries();
                 foreach (Country country in countries)
                 {
-                    countryItems.Add(new SiteDropdownDTO
+                    response.Countries.Add(new MasterDataDTO
                     {
                         Id = country.Id,
                         Name = country.Name
@@ -366,14 +361,12 @@ namespace BuilderLedger.API.Controllers
                 }
             }
 
-            List<SiteScopeMaster> scopeMasters;
-            if(scopeMastersData)
+            if (scopeMastersData == true)
             {
-                scopeMasters = _siteScopeMasterRepository.GetAll();
-                List<SiteDropdownDTO> scopeMasterItems = new();
+                List<SiteScopeMaster> scopeMasters = _siteScopeMasterRepository.GetAll();
                 foreach (SiteScopeMaster scope in scopeMasters)
                 {
-                    scopeMasterItems.Add(new SiteDropdownDTO
+                    response.ScopeMasters.Add(new MasterDataDTO
                     {
                         Id = scope.Id,
                         Name = scope.ScopeName
@@ -381,14 +374,12 @@ namespace BuilderLedger.API.Controllers
                 }
             }
 
-            List<SiteScopeStatus> scopeStatuses;
-            if(scopeStatusesData)
+            if (scopeStatusesData == true)
             {
-                scopeStatuses = _siteScopeRepository.GetAllStatuses();
-                List<SiteDropdownDTO> scopeStatusItems = new();
+                List<SiteScopeStatus> scopeStatuses = _siteScopeRepository.GetAllStatuses();
                 foreach (SiteScopeStatus scopeStatus in scopeStatuses)
                 {
-                    scopeStatusItems.Add(new SiteDropdownDTO
+                    response.ScopeStatuses.Add(new MasterDataDTO
                     {
                         Id = scopeStatus.Id,
                         Name = scopeStatus.StatusName
@@ -396,14 +387,6 @@ namespace BuilderLedger.API.Controllers
                 }
             }
 
-            SiteMasterDataDTO response = new()
-            {
-                Statuses = new List<SiteDropdownDTO>(),
-                AddressTypes = new List<SiteDropdownDTO>(),
-                Countries = new List<SiteDropdownDTO>(),
-                ScopeMasters = new List<SiteDropdownDTO>(),
-                ScopeStatuses = new List<SiteDropdownDTO>()
-            };
             return Ok(response);
         }
 
@@ -450,7 +433,7 @@ namespace BuilderLedger.API.Controllers
 
         // PATCH api/Site/scope-status
         [HttpPatch(SiteAPIEnpoints.UpdateScopeStatus)]
-        public IActionResult UpdateScopeStatus([FromBody] UpdateScopeStatusDto dto)
+        public IActionResult UpdateScopeStatus([FromBody] UpdateScopeStatusDTO dto)
         {
             _logger.LogInformation("API Action: UpdateScopeStatus | Invoked: {InvokedAt}", DateTime.Now.ToString("HH:mm:ss.fff"));
 
@@ -467,7 +450,7 @@ namespace BuilderLedger.API.Controllers
             return Ok("Scope status updated.");
         }
 
-        private async Task SiteAddedNotification(Site site, SiteAPIDTO siteApiDto, string addedByName)
+        private async Task SiteAddedNotification(Site site, SiteDTO siteDto, string addedByName)
         {
             string siteStatusName = "Not Provided";
             List<SiteStatus> siteStatuses = _siteStatusRepository.GetAll();
@@ -482,21 +465,21 @@ namespace BuilderLedger.API.Controllers
             }
             string siteAddress = "";
 
-            if (!string.IsNullOrWhiteSpace(siteApiDto.AddressLine1))
-                siteAddress = siteApiDto.AddressLine1;
+            if (!string.IsNullOrWhiteSpace(siteDto.AddressLine1))
+                siteAddress = siteDto.AddressLine1;
 
-            if (!string.IsNullOrWhiteSpace(siteApiDto.CountryName))
+            if (!string.IsNullOrWhiteSpace(siteDto.CountryName))
             {
                 if (siteAddress != "")
                     siteAddress += ", ";
-                siteAddress += siteApiDto.CountryName;
+                siteAddress += siteDto.CountryName;
             }
 
-            if (siteApiDto.PinCode.HasValue)
+            if (siteDto.PinCode.HasValue)
             {
                 if (siteAddress != "")
                     siteAddress += ", ";
-                siteAddress += siteApiDto.PinCode.Value.ToString();
+                siteAddress += siteDto.PinCode.Value.ToString();
             }
 
             List<SiteScope> siteScopes = _siteScopeRepository.Get(site.Id);
@@ -522,16 +505,16 @@ namespace BuilderLedger.API.Controllers
                 site.Note ?? "", addedByName);
         }
 
-        private async Task<bool> SendSiteUpdateEmail(SiteAPIDTO siteApiDto, Site oldSite, List<SiteScope> oldScopes)
+        private async Task<bool> SendSiteUpdateEmail(SiteDTO siteDto, Site oldSite, List<SiteScope> oldScopes)
         {
             if (oldSite == null)
                 return false;
 
             List<SiteUpdateChange> changes = new();
-            List<ScopeSaveItem> newScopes = siteApiDto.SelectedScopes ?? new();
+            List<SiteScopeDTO> newScopes = siteDto.SelectedScopes ?? new();
 
             // Check site status.
-            if (oldSite.SiteStatusId != siteApiDto.SiteStatusId)
+            if (oldSite.SiteStatusId != siteDto.SiteStatusId)
             {
                 string oldStatus = "Not Provided";
                 string newStatus = "Not Provided";
@@ -543,7 +526,7 @@ namespace BuilderLedger.API.Controllers
                     if (status.Id == oldSite.SiteStatusId)
                         oldStatus = status.Status ?? "Not Provided";
 
-                    if (status.Id == siteApiDto.SiteStatusId)
+                    if (status.Id == siteDto.SiteStatusId)
                         newStatus = status.Status ?? "Not Provided";
                 }
 
@@ -556,15 +539,15 @@ namespace BuilderLedger.API.Controllers
             }
 
             // Check expected budget.
-            if (oldSite.ExpectedBudget != siteApiDto.ExpectedBudget)
+            if (oldSite.ExpectedBudget != siteDto.ExpectedBudget)
             {
                 changes.Add(new SiteUpdateChange
                 {
                     FieldName = "Expected Budget",
                     OldValue = oldSite.ExpectedBudget.HasValue
                         ? $"₹{oldSite.ExpectedBudget.Value:N0}" : "Not Provided",
-                    NewValue = siteApiDto.ExpectedBudget.HasValue
-                        ? $"₹{siteApiDto.ExpectedBudget.Value:N0}" : "Not Provided"
+                    NewValue = siteDto.ExpectedBudget.HasValue
+                        ? $"₹{siteDto.ExpectedBudget.Value:N0}" : "Not Provided"
                 });
             }
 
@@ -572,9 +555,9 @@ namespace BuilderLedger.API.Controllers
             List<SiteScopeStatus> allScopeStatuses = _siteScopeRepository.GetAllStatuses();
             foreach (SiteScope oldScope in oldScopes)
             {
-                ScopeSaveItem? matchingScope = null;
+                SiteScopeDTO? matchingScope = null;
 
-                foreach (ScopeSaveItem newScope in newScopes)
+                foreach (SiteScopeDTO newScope in newScopes)
                 {
                     if (newScope.SiteScopeMasterId == oldScope.SiteScopeId)
                     {
@@ -622,7 +605,7 @@ namespace BuilderLedger.API.Controllers
             // Check newly added scopes.
             List<SiteScopeMaster> allScopeMasters = _siteScopeMasterRepository.GetAll();
 
-            foreach (ScopeSaveItem newScope in newScopes)
+            foreach (SiteScopeDTO newScope in newScopes)
             {
                 bool alreadyExists = false;
 
@@ -660,35 +643,28 @@ namespace BuilderLedger.API.Controllers
             if (changes.Count == 0)
                 return false;
 
-            await _updateEmailService.SendAsync(siteApiDto.Name ?? oldSite.Name ?? "Unnamed Site",
+            await _updateEmailService.SendAsync(siteDto.Name ?? oldSite.Name ?? "Unnamed Site",
                                                 User?.Identity?.Name ?? "System", DateTime.Now, changes);
 
             return true;
         }
 
-        private void AddAddressIfPresent(int siteId, SiteAPIDTO siteApiDto)
+        private void AddAddressIfPresent(int siteId, SiteDTO siteDto)
         {
-            if (!string.IsNullOrEmpty(siteApiDto.AddressLine1)
-                || siteApiDto.AddressTypeId > 0
-                || siteApiDto.CountryId > 0
-                || siteApiDto.PinCode > 0)
+            if (!string.IsNullOrEmpty(siteDto.AddressLine1)
+                || siteDto.AddressTypeId > 0
+                || siteDto.CountryId > 0
+                || siteDto.PinCode > 0)
             {
                 Address address = new(0,
-                    siteApiDto.AddressLine1,
-                    siteApiDto.AddressTypeId ?? 0,
-                    siteApiDto.CountryId ?? 0,
-                    siteApiDto.PinCode ?? 0,
+                    siteDto.AddressLine1,
+                    siteDto.AddressTypeId ?? 0,
+                    siteDto.CountryId ?? 0,
+                    siteDto.PinCode ?? 0,
                     siteId);
 
                 _addressRepository.Upsert(address);
             }
         }
-    }
-
-    public class UpdateScopeStatusDto
-    {
-        public int SiteScopeId { get; set; }
-        public int ScopeStatusId { get; set; }
-        public string? Remarks { get; set; }
     }
 }
