@@ -29,7 +29,7 @@ export const API_URLS = {
     base: `${API_BASE_URL}/Site`,
     item: (id: number) => `${API_BASE_URL}/Site/${id}`,
     filter: `${API_BASE_URL}/Site/filter`,
-    dropdown: `${API_BASE_URL}/Site/dropdown-data`,
+    masterData: `${API_BASE_URL}/Site/master-data`,
     providers: `${API_BASE_URL}/Site/service-providers`,
     scopeStatus: `${API_BASE_URL}/Site/scope-status`,
   },

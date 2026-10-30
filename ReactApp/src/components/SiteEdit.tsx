@@ -1,7 +1,7 @@
 // Path: src/components/SiteEdit.tsx
 import { useEffect, useState }              from "react";
 import { useNavigate, useParams, Link }    from "react-router-dom";
-import { getDropdownData, getServiceProviders, getSite, updateSite, } from "../services/siteService";
+import { getMasterData, getServiceProviders, getSite, updateSite } from "../services/siteService";
 import type { DropdownItem, ProviderApiOption, ProviderOption, ScopeMasterOption, ScopeStatusOption, ScopeItemDto, } from "../services/siteService";
 
 // ── Reusable CheckboxDropdown — same as SiteAdd ─────────────────
@@ -132,91 +132,80 @@ function SiteEdit() {
   const [loading,      setLoading]      = useState(true);
 
   // ── Load all data on mount ───────────────────────────────────
-  useEffect(() => {
-    Promise.all([
-      getDropdownData(),
-      getServiceProviders(),
-       getSite(Number(id)),
-    ])
-      .then(([dd, sp, site]) => {
-        // Dropdowns
-        setStatuses(dd.statuses);
-        setAddressTypes(dd.addressTypes);
-        setCountries(dd.countries);
-        setScopeMasters(dd.scopeMasters);
-        setScopeStatuses(dd.scopeStatuses);
+  useEffect(() => {Promise.all([
+    getMasterData({ siteStatusData: true, addressTypeData: true, countriesData: true, scopeMastersData: true, scopeStatusesData: true }),
+    getServiceProviders(),
+    getSite(Number(id))
+  ])
+    .then(([dd, sp, site]) => {
 
-        // SP options
-        setMasons(normalizeProviderOptions(sp.masterMasons));
-        setElectricians(normalizeProviderOptions(sp.electricians));
-        setLabours(sp.labours);
-        setPlumbers(sp.plumbers);
-        setPainters(sp.painters);
-        setCarpenters(sp.carpenters);
-        setTilers(sp.tilers);
+      // Master Data
+      setStatuses(dd.statuses ?? []);
+      setAddressTypes(dd.addressTypes ?? []);
+      setCountries(dd.countries ?? []);
+      setScopeMasters(dd.scopeMasters ?? []);
+      setScopeStatuses(dd.scopeStatuses ?? []);
 
-        // Pre-fill site basic fields
-        setName(site.name ?? "");
-        setContactName(site.contactName ?? "");
-        setContactNumber(site.contactNumber ?? "");
-        setStartedDate(site.startedDate?.slice(0, 10) ?? "");
-        //setNote(site.note ?? "");
-        setSiteStatusId(site.siteStatusId ?? 0);
+      // Service Provider Options
+      setMasons(normalizeProviderOptions(sp.masterMasons));
+      setElectricians(normalizeProviderOptions(sp.electricians));
 
-        // NEW — pre-fill budget + completion date
-        setExpectedBudget(
-          site.expectedBudget ? String(site.expectedBudget) : ""
-        );
-        setExpectedCompletion(
-          site.expectedCompletionDate?.slice(0, 10) ?? ""
-        );
+      setLabours(sp.labours);
+      setPlumbers(sp.plumbers);
+      setPainters(sp.painters);
+      setCarpenters(sp.carpenters);
+      setTilers(sp.tilers);
 
-        // Pre-fill address
-        setAddressLine1(site.addressLine1 ?? "");
-        setPinCode(site.pinCode ? String(site.pinCode) : "");
+      // Existing Site Details
+      setName(site.name ?? "");
+      setContactName(site.contactName ?? "");
+      setContactNumber(site.contactNumber ?? "");
+      setStartedDate(site.startedDate?.slice(0, 10) ?? "");
+      setSiteStatusId(site.siteStatusId ?? 0);
 
-        // Find addressTypeId by name match
-        const matchedAddr = dd.addressTypes.find(
-          (a) => a.name === site.addressTypes
-        );
-        if (matchedAddr) setAddressTypeId(matchedAddr.id);
+      // Budget and Completion Date
+      setExpectedBudget( site.expectedBudget != null ? String(site.expectedBudget) : "" );
 
-        // Find countryId by name match
-        const matchedCountry = dd.countries.find(
-          (c) => c.name === site.countryName
-        );
-        if (matchedCountry) setCountryId(matchedCountry.id);
+      setExpectedCompletion(site.expectedCompletionDate?.slice(0, 10) ?? "" );
 
-        // Show address section if any address data exists
-        if (
-          site.addressLine1 ||
-          site.addressTypes ||
-          site.countryName  ||
-          site.pinCode
-        ) {
-          setShowAddress(true);
-        }
+      // Address
+      setAddressLine1(site.addressLine1 ?? "");
+      setPinCode(site.pinCode != null ? String(site.pinCode) : "");
 
-        // Pre-fill service provider selections
-        setMasonIds(site.masterMasonIds ?? []);
-        setLabourIds(site.labourIds ?? []);
-        setElectricianIds(site.electricianIds ?? []);
-        setPlumberIds(site.plumberIds ?? []);
-        setPainterIds(site.painterIds ?? []);
-        setCarpenterIds(site.carpenterIds ?? []);
-        setTilerIds(site.tilerIds ?? []);
+      const matchedAddr = dd.addressTypes.find((a) => a.name === site.addressTypes);
 
-        // NEW — pre-fill existing scopes
-        setSelectedScopes(
-          (site.scopes ?? []).map((s) => ({
-            siteScopeMasterId: s.siteScopeMasterId,
-            scopeStatusId:     s.scopeStatusId,
-            remarks:           s.remarks,
-          }))
-        );
-      })
-      .catch((err: Error) => setErrorMessage(err.message))
-      .finally(() => setLoading(false));
+      if (matchedAddr) {
+        setAddressTypeId(matchedAddr.id);
+      }
+
+      const matchedCountry = dd.countries.find((c) => c.name === site.countryName);
+
+      if (matchedCountry) {
+        setCountryId(matchedCountry.id);
+      }
+
+      if (site.addressLine1 || site.addressTypes || site.countryName ||site.pinCode) {
+        setShowAddress(true);
+      }
+
+      // Service Provider Selections
+      setMasonIds(site.masterMasonIds ?? []);
+      setLabourIds(site.labourIds ?? []);
+      setElectricianIds(site.electricianIds ?? []);
+      setPlumberIds(site.plumberIds ?? []);
+      setPainterIds(site.painterIds ?? []);
+      setCarpenterIds(site.carpenterIds ?? []);
+      setTilerIds(site.tilerIds ?? []);
+
+      // Existing Work Scopes
+      setSelectedScopes(
+        (site.scopes ?? []).map((s) => ({ siteScopeMasterId: s.siteScopeMasterId, scopeStatusId: s.scopeStatusId, remarks: s.remarks}))
+      );
+    })
+
+    .catch((err: Error) => {setErrorMessage(err.message); })
+    .finally(() => {setLoading(false); 
+    });
   }, [id]);
 
   // ── Scope toggle — same logic as SiteAdd ────────────────────

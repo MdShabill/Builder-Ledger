@@ -67,7 +67,7 @@ namespace BuilderLedger.API.APIControllers
             // DELETE api/Site/2                  -> delete
             public const string Delete = "{id:int}";
 
-            public const string DropdownData = "dropdown-data";
+            public const string MasterData = "master-data";
             public const string GetServiceProviders = "service-providers";
             public const string UpdateScopeStatus = "scope-status";
         }

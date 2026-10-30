@@ -1,7 +1,7 @@
 // Path: src/components/SiteList.tsx
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { getAllSites, filterSites, getDropdownData, deleteSite } from "../services/siteService";
+import { getAllSites, filterSites, getMasterData, deleteSite } from "../services/siteService";
 import type { SiteListDto, DropdownItem } from "../services/siteService";
 import PageHeader from "./PageHeader";
 
@@ -55,9 +55,11 @@ function SiteList() {
     }
   };
 
-  useEffect(() => {
-    run(getAllSites);
-    getDropdownData().then((d) => setStatuses(d.statuses ?? [])).catch((e: Error) => setError(e.message));
+  useEffect(() => { run(getAllSites);
+    getMasterData({siteStatusData: true })
+    .then((data) => {setStatuses(data.statuses ?? []); })
+    .catch((err: Error) => {
+      setError(err.message); });
   }, []);
 
   const toNum = (v: string) => (v.trim() !== "" ? Number(v) : undefined);

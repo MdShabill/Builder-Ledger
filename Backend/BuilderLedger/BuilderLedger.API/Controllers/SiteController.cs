@@ -1,12 +1,13 @@
 using AutoMapper;
-using BuilderLedger.Core.DataModels;
-using BuilderLedger.Repository.Interfaces;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Caching.Memory;
 using BuilderLedger.API.APIControllers.ApiEndpoints;
 using BuilderLedger.API.Controllers.APIViewModels;
-using BuilderLedger.Core.Enums;
 using BuilderLedger.API.Services;
+using BuilderLedger.Core.DataModels;
+using BuilderLedger.Core.Enums;
+using BuilderLedger.Repository.Interfaces;
+using MailKit;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace BuilderLedger.API.Controllers
 {
@@ -312,74 +313,96 @@ namespace BuilderLedger.API.Controllers
         }
 
 
-        // GET api/Site/dropdown-data
-        [HttpGet(SiteAPIEnpoints.DropdownData)]
-        public IActionResult GetDropdownData()
+        //GET /api/Site/master-data
+        [HttpGet(SiteAPIEnpoints.MasterData)]
+        public IActionResult GetMasterDate(bool siteStatusData, bool addressTypeData, bool countriesData,
+                                           bool scopeMastersData, bool scopeStatusesData)
         {
             _logger.LogInformation("API Action: GetDropdownData | Invoked: {InvokedAt}", DateTime.Now.ToString("HH:mm:ss.fff"));
 
-            List<SiteStatus> statuses = _siteStatusRepository.GetAll();
-            List<AddressType> addressTypes = _addressTypeRepository.GetAll();
-            List<Country> countries = _countryRepository.GetAllCountries();
-            List<SiteScopeMaster> scopeMasters = _siteScopeMasterRepository.GetAll();
-            List<SiteScopeStatus> scopeStatuses = _siteScopeRepository.GetAllStatuses();
-
-            List<DropdownItemDTO> statusItems = new();
-            foreach (SiteStatus status in statuses)
+            List<SiteStatus> statuses;
+            if (siteStatusData)
             {
-                statusItems.Add(new DropdownItemDTO
+                statuses = _siteStatusRepository.GetAll();
+                List<SiteDropdownDTO> statusItems = new();
+                foreach (SiteStatus status in statuses)
                 {
-                    Id = status.Id,
-                    Name = status.Status
-                });
+                    statusItems.Add(new SiteDropdownDTO
+                    {
+                        Id = status.Id,
+                        Name = status.Status
+                    });
+                }
+
             }
 
-            List<DropdownItemDTO> addressTypeItems = new();
-            foreach (AddressType addressType in addressTypes)
+            List<AddressType> addressTypes;
+            if (addressTypeData)
             {
-                addressTypeItems.Add(new DropdownItemDTO
+                addressTypes = _addressTypeRepository.GetAll();
+                List<SiteDropdownDTO> addressTypeItems = new();
+                foreach (AddressType addressType in addressTypes)
                 {
-                    Id = addressType.Id,
-                    Name = addressType.Name
-                });
+                    addressTypeItems.Add(new SiteDropdownDTO
+                    {
+                        Id = addressType.Id,
+                        Name = addressType.Name
+                    });
+                }
             }
 
-            List<DropdownItemDTO> countryItems = new();
-            foreach (Country country in countries)
+            List<Country> countries;
+            if(countriesData)
             {
-                countryItems.Add(new DropdownItemDTO
+                countries = _countryRepository.GetAllCountries();
+                List<SiteDropdownDTO> countryItems = new();
+                foreach (Country country in countries)
                 {
-                    Id = country.Id,
-                    Name = country.Name
-                });
+                    countryItems.Add(new SiteDropdownDTO
+                    {
+                        Id = country.Id,
+                        Name = country.Name
+                    });
+                }
             }
 
-            List<DropdownItemDTO> scopeMasterItems = new();
-            foreach (SiteScopeMaster scope in scopeMasters)
+            List<SiteScopeMaster> scopeMasters;
+            if(scopeMastersData)
             {
-                scopeMasterItems.Add(new DropdownItemDTO
+                scopeMasters = _siteScopeMasterRepository.GetAll();
+                List<SiteDropdownDTO> scopeMasterItems = new();
+                foreach (SiteScopeMaster scope in scopeMasters)
                 {
-                    Id = scope.Id,
-                    Name = scope.ScopeName
-                });
+                    scopeMasterItems.Add(new SiteDropdownDTO
+                    {
+                        Id = scope.Id,
+                        Name = scope.ScopeName
+                    });
+                }
             }
 
-            List<DropdownItemDTO> scopeStatusItems = new();
-            foreach (SiteScopeStatus scopeStatus in scopeStatuses)
+            List<SiteScopeStatus> scopeStatuses;
+            if(scopeStatusesData)
             {
-                scopeStatusItems.Add(new DropdownItemDTO
+                scopeStatuses = _siteScopeRepository.GetAllStatuses();
+                List<SiteDropdownDTO> scopeStatusItems = new();
+                foreach (SiteScopeStatus scopeStatus in scopeStatuses)
                 {
-                    Id = scopeStatus.Id,
-                    Name = scopeStatus.StatusName
-                });
+                    scopeStatusItems.Add(new SiteDropdownDTO
+                    {
+                        Id = scopeStatus.Id,
+                        Name = scopeStatus.StatusName
+                    });
+                }
             }
-            SiteDropdownDTO response = new()
+
+            SiteMasterDataDTO response = new()
             {
-                Statuses = statusItems,
-                AddressTypes = addressTypeItems,
-                Countries = countryItems,
-                ScopeMasters = scopeMasterItems,
-                ScopeStatuses = scopeStatusItems
+                Statuses = new List<SiteDropdownDTO>(),
+                AddressTypes = new List<SiteDropdownDTO>(),
+                Countries = new List<SiteDropdownDTO>(),
+                ScopeMasters = new List<SiteDropdownDTO>(),
+                ScopeStatuses = new List<SiteDropdownDTO>()
             };
             return Ok(response);
         }

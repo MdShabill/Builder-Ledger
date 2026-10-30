@@ -1,7 +1,7 @@
 // Path: src/components/SiteAdd.tsx
 import { useEffect, useState }     from "react";
 import { useNavigate, Link }       from "react-router-dom";
-import { getDropdownData, getServiceProviders, createSite, } from "../services/siteService";
+import { getMasterData, getServiceProviders, createSite } from "../services/siteService";
 import type { DropdownItem, ProviderApiOption, ProviderOption,  ScopeMasterOption, ScopeStatusOption, ScopeItemDto, } from "../services/siteService";
 
 // ── Checkbox Dropdown Component (existing) ──────────────────────
@@ -100,25 +100,31 @@ function SiteAdd() {
     name: "value" in item ? item.value : item.name,
   }));
 
-  useEffect(() => {
-    Promise.all([getDropdownData(), getServiceProviders()])
-      .then(([dd, sp]) => {
-        setStatuses(dd.statuses);
-        setAddressTypes(dd.addressTypes);
-        setCountries(dd.countries);
-        setScopeMasters(dd.scopeMasters);
-        setScopeStatuses(dd.scopeStatuses);
+  useEffect(() => { Promise.all([
+    getMasterData({ siteStatusData: true, addressTypeData: true, countriesData: true, scopeMastersData: true, scopeStatusesData: true }),
+    getServiceProviders()
+  ])
+    .then(([dd, sp]) => {
 
-        setMasons(normalizeProviderOptions(sp.masterMasons));
-        setElectricians(normalizeProviderOptions(sp.electricians));
+      // Master Data
+      setStatuses(dd.statuses ?? []);
+      setAddressTypes(dd.addressTypes ?? []);
+      setCountries(dd.countries ?? []);
+      setScopeMasters(dd.scopeMasters ?? []);
+      setScopeStatuses(dd.scopeStatuses ?? []);
 
-        setLabours(sp.labours);
-        setPlumbers(sp.plumbers);
-        setPainters(sp.painters);
-        setCarpenters(sp.carpenters);
-        setTilers(sp.tilers);
-      })
-      .catch((err: Error) => setErrorMessage(err.message));
+      // Service Providers
+      setMasons(normalizeProviderOptions(sp.masterMasons));
+      setElectricians(normalizeProviderOptions(sp.electricians));
+
+      setLabours(sp.labours);
+      setPlumbers(sp.plumbers);
+      setPainters(sp.painters);
+      setCarpenters(sp.carpenters);
+      setTilers(sp.tilers);
+
+    })
+    .catch((err: Error) => {setErrorMessage(err.message);});
   }, []);
 
   // Toggle scope selection

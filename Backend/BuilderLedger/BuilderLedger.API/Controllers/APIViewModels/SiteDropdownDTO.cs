@@ -1,17 +1,17 @@
 namespace BuilderLedger.API.Controllers.APIViewModels
 {
-    public class DropdownItemDTO
+    public class SiteDropdownDTO
     {
         public int Id { get; set; }
         public string Name { get; set; } = string.Empty;
     }
 
-    public class SiteDropdownDTO
+    public class SiteMasterDataDTO
     {
-        public List<DropdownItemDTO> Statuses { get; set; } = new();
-        public List<DropdownItemDTO> AddressTypes { get; set; } = new();
-        public List<DropdownItemDTO> Countries { get; set; } = new();
-        public List<DropdownItemDTO> ScopeMasters { get; set; } = new();
-        public List<DropdownItemDTO> ScopeStatuses { get; set; } = new();
+        public List<SiteDropdownDTO> Statuses { get; set; } = new();
+        public List<SiteDropdownDTO> AddressTypes { get; set; } = new();
+        public List<SiteDropdownDTO> Countries { get; set; } = new();
+        public List<SiteDropdownDTO> ScopeMasters { get; set; } = new();
+        public List<SiteDropdownDTO> ScopeStatuses { get; set; } = new();
     }
 }

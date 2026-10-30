@@ -1,8 +1,10 @@
-// Path: src/services/siteService.ts
+
 import { API_URLS } from "../constants/urls";
 
 const URL = API_URLS.site;
 const JSON_HEADERS = { "Content-Type": "application/json" };
+
+// ─── Interfaces ──────────────────────────────────────────
 
 export interface SiteDropdownDto { id: number; name: string; }
 export interface DropdownItem { id: number; name: string; }
@@ -61,51 +63,60 @@ export interface SiteFilterParams {
   budgetFrom?: number; budgetTo?: number;
 }
 
-// The API returns either { message } JSON or a plain-text string
-const getError = async (res: Response, message: string) => {
+export interface SiteMasterDataParams {
+  siteStatusData?: boolean;
+  addressTypeData?: boolean;
+  countriesData?: boolean;
+  scopeMastersData?: boolean;
+  scopeStatusesData?: boolean;
+}
+
+// ─── Helper ──────────────────────────────────────────────
+
+const getError = async (res: Response, message: string): Promise<Error> => {
   const text = await res.text().catch(() => "");
   try {
     const data = JSON.parse(text);
-    return new Error(data.message || data.title || message);
+    return new Error(data?.message || data?.title || message);
   } catch {
     return new Error(text || message);
   }
 };
 
-// GET /Site
-export const getNavbarSites = async (): Promise<SiteDropdownDto[]> => {
-  const res = await fetch(URL.base);
-  if (!res.ok) throw new Error("Failed to fetch sites");
+const fetchJson = async <T>(url: string, error: string): Promise<T> => {
+  const res = await fetch(url);
+  if (!res.ok) throw await getError(res, error);
   return res.json();
 };
+
+// ─── Site APIs ───────────────────────────────────────────
 
 // GET /Site
-export const getAllSites = async (): Promise<SiteListDto[]> => {
-  const res = await fetch(URL.base);
-  if (!res.ok) throw new Error("Failed to fetch sites");
-  return res.json();
-};
+export const getNavbarSites = () =>
+  fetchJson<SiteDropdownDto[]>(URL.base, "Failed to fetch sites");
 
-// GET /Site/{id}  (Edit page + Site detail)
-export const getSite = async (id: number): Promise<SiteEditDto> => {
-  const res = await fetch(URL.item(id));
-  if (!res.ok) throw new Error("Site not found");
-  return res.json();
-};
+// GET /Site
+export const getAllSites = () =>
+  fetchJson<SiteListDto[]>(URL.base, "Failed to fetch sites");
 
-// GET /Site/dropdown-data
-export const getDropdownData = async (): Promise<DropdownResponse> => {
-  const res = await fetch(URL.dropdown);
-  if (!res.ok) throw new Error("Failed to fetch dropdown data");
-  return res.json();
+// GET /Site/{id}
+export const getSite = (id: number) =>
+  fetchJson<SiteEditDto>(URL.item(id), "Site not found");
+
+// GET /Site/master-data
+export const getMasterData = (options: SiteMasterDataParams): Promise<DropdownResponse> => {
+  const params = new URLSearchParams();
+  Object.entries(options).forEach(([key, value]) => {
+    if (value === true) params.append(key, "true");
+  });
+  return fetchJson<DropdownResponse>(
+    `${URL.masterData}?${params}`, "Failed to fetch master data"
+  );
 };
 
 // GET /Site/service-providers
-export const getServiceProviders = async (): Promise<ServiceProviderResponse> => {
-  const res = await fetch(URL.providers);
-  if (!res.ok) throw new Error("Failed to fetch service providers");
-  return res.json();
-};
+export const getServiceProviders = () =>
+  fetchJson<ServiceProviderResponse>(URL.providers, "Failed to fetch service providers");
 
 // POST /Site
 export const createSite = async (payload: SiteCreateDto): Promise<number> => {
@@ -141,15 +152,15 @@ export const updateScopeStatus = async (
   if (!res.ok) throw await getError(res, "Failed to update scope status");
 };
 
-// GET /Site/filter?search=&statusId=&fromDate=&toDate=&budgetFrom=&budgetTo=
+// GET /Site/filter
 export const filterSites = async (filters: SiteFilterParams): Promise<SiteListDto[]> => {
   const params = new URLSearchParams();
   Object.entries(filters).forEach(([key, value]) => {
     if (value !== undefined && value !== null && String(value).trim() !== "")
       params.append(key, String(value).trim());
   });
-
-  const res = await fetch(`${URL.filter}${params.size ? `?${params}` : ""}`);
-  if (!res.ok) throw await getError(res, "Failed to filter sites");
-  return res.json();
+  return fetchJson<SiteListDto[]>(
+    `${URL.filter}${params.size ? `?${params}` : ""}`,
+    "Failed to filter sites"
+  );
 };
