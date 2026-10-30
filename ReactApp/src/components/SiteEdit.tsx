@@ -1,7 +1,7 @@
 // Path: src/components/SiteEdit.tsx
 import { useEffect, useState }              from "react";
 import { useNavigate, useParams, Link }    from "react-router-dom";
-import { getDropdownData, getServiceProviders, getSiteById, updateSite, } from "../services/siteService";
+import { getDropdownData, getServiceProviders, getSite, updateSite, } from "../services/siteService";
 import type { DropdownItem, ProviderApiOption, ProviderOption, ScopeMasterOption, ScopeStatusOption, ScopeItemDto, } from "../services/siteService";
 
 // ── Reusable CheckboxDropdown — same as SiteAdd ─────────────────
@@ -136,7 +136,7 @@ function SiteEdit() {
     Promise.all([
       getDropdownData(),
       getServiceProviders(),
-      getSiteById(Number(id)),
+       getSite(Number(id)),
     ])
       .then(([dd, sp, site]) => {
         // Dropdowns

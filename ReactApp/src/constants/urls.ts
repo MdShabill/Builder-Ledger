@@ -27,18 +27,10 @@ export const API_URLS = {
 
   site: {
     base: `${API_BASE_URL}/Site`,
-    add: `${API_BASE_URL}/Site/add`,
-    update: `${API_BASE_URL}/Site/update`,
-    delete: (id: number) => `${API_BASE_URL}/Site/${id}`,
-
-    // Get all sites
-    all: `${API_BASE_URL}/Site`,
-
-    select: (id: number) => `${API_BASE_URL}/Site/select-site?id=${id}`,
-    edit: (id: number) => `${API_BASE_URL}/Site/edit/${id}`,
+    item: (id: number) => `${API_BASE_URL}/Site/${id}`,
+    filter: `${API_BASE_URL}/Site/filter`,
     dropdown: `${API_BASE_URL}/Site/dropdown-data`,
     providers: `${API_BASE_URL}/Site/service-providers`,
-    filter: `${API_BASE_URL}/Site/filter`,
     scopeStatus: `${API_BASE_URL}/Site/scope-status`,
   },
 

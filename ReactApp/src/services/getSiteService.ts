@@ -1,4 +1,4 @@
-//Path: src/services/getSiteService.ts
+
 import { API_URLS } from "../constants/urls";
 
 export interface SiteDto {
@@ -14,13 +14,17 @@ export interface SiteDto {
 }
 
 export const getAllSites = async (): Promise<SiteDto[]> => {
-  const res = await fetch(API_URLS.site.all);
+  const res = await fetch(API_URLS.site.base);
+
   if (!res.ok) throw new Error("Failed to fetch sites");
+
   return res.json();
 };
 
 export const getSiteById = async (id: number) => {
-  const res = await fetch(API_URLS.site.select(id));
+  const res = await fetch(API_URLS.site.item(id));
+
   if (!res.ok) throw new Error("Site not found");
+
   return res.json();
 };

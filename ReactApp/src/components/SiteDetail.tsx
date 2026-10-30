@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { useParams, Link } from "react-router-dom";
 
-import { getSiteById } from "../services/siteService";
+import { getSite } from "../services/siteService";
 
 import { getDashboardStats, getDashboardScopeItems, } from "../services/dashboardService";
 
@@ -44,7 +44,7 @@ function SiteDetail() {
     }
 
     Promise.all([
-      getSiteById(siteId),
+      getSite(siteId),
       getDashboardStats(siteId),
       getDashboardScopeItems(siteId),
     ])

@@ -20,7 +20,7 @@ export interface SiteCreateDto {
   selectedTilerIds: number[];
 }
 
-const ADD_API_URL = API_URLS.site.add;
+const ADD_API_URL = API_URLS.site.base;
 
 export const addSite = async (
   site: SiteCreateDto
