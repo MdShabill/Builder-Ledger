@@ -1,18 +1,21 @@
 //Path: src/constants/urls.ts
 
-//Loalhost environment variable for API base URL
-export const API_BASE_URL = (
-  import.meta.env.VITE_API_BASE_URL || "https://localhost:7142/api"
-).replace(/\/$/, "");
+// //Loalhost environment variable for API base URL
+// export const API_BASE_URL = (
+//   import.meta.env.VITE_API_BASE_URL || "https://localhost:7142/api"
+// ).replace(/\/$/, "");
 
 
 // Production environment variable for API base URL
 
-// const API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.replace(/\/+$/, "");
+// API base URL from the active Vite environment file
+const configuredApiBaseUrl = import.meta.env.VITE_API_BASE_URL;
 
-// if (!API_BASE_URL) {
-//   throw new Error("VITE_API_BASE_URL is not configured.");
-// }
+if (!configuredApiBaseUrl) {
+  throw new Error("VITE_API_BASE_URL is not configured.");
+}
+
+export const API_BASE_URL = configuredApiBaseUrl.replace(/\/+$/, "");
 
 // Keep your existing API_URLS and APP_ROUTES below this line.
 
