@@ -64,8 +64,7 @@ try
                 policy
                     .WithOrigins(
                         "http://localhost:5173",
-                        "https://constructionapp1.azurewebsites.net",
-                        "https://thankful-hill-0fc21d61e.5.azurestaticapps.net"
+                        "https://red-bay-0e0f3331e.4.azurestaticapps.net"
                     )
                     .AllowAnyHeader()
                     .AllowAnyMethod();
