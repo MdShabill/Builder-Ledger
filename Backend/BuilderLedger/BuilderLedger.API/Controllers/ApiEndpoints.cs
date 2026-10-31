@@ -53,20 +53,17 @@ namespace BuilderLedger.API.APIControllers
 
         public class SiteAPIEnpoints
         {
-            // GET    api/Site                    -> list all sites
             public const string GetAll = "";
-            // GET    api/Site/filter?search=...  -> filtered list
             public const string FilterSites = "filter";
-
-            // POST   api/Site                    -> create
             public const string Add = "";
-            // GET    api/Site/2                  -> load one site (Edit page)
             public const string Edit = "{id:int}";
-            // PUT    api/Site/2                  -> update
             public const string Update = "{id:int}";
-            // DELETE api/Site/2                  -> delete
             public const string Delete = "{id:int}";
+        }
 
+
+        public class MasterDataAPIEndpoints
+        {
             public const string MasterData = "master-data";
             public const string GetServiceProviders = "service-providers";
             public const string UpdateScopeStatus = "scope-status";
