@@ -1,7 +1,7 @@
 import { API_URLS } from "../constants/urls";
 
 export const getDropdownData = async () => {
-  const res = await fetch(API_URLS.site.masterData);
+  const res = await fetch(API_URLS.allMasterData.MasterData);
 
   if (!res.ok) {
     throw new Error("Failed to fetch dropdown");

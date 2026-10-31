@@ -2,6 +2,7 @@
 import { API_URLS } from "../constants/urls";
 
 const URL = API_URLS.site;
+const MasterURL = API_URLS.allMasterData;
 const JSON_HEADERS = { "Content-Type": "application/json" };
 
 // ─── Interfaces ──────────────────────────────────────────
@@ -110,13 +111,13 @@ export const getMasterData = (options: SiteMasterDataParams): Promise<DropdownRe
     if (value === true) params.append(key, "true");
   });
   return fetchJson<DropdownResponse>(
-    `${URL.masterData}?${params}`, "Failed to fetch master data"
+    `${MasterURL.MasterData}?${params}`, "Failed to fetch master data"
   );
 };
 
 // GET /Site/service-providers
 export const getServiceProviders = () =>
-  fetchJson<ServiceProviderResponse>(URL.providers, "Failed to fetch service providers");
+  fetchJson<ServiceProviderResponse>(MasterURL.providers, "Failed to fetch service providers");
 
 // POST /Site
 export const createSite = async (payload: SiteCreateDto): Promise<number> => {
@@ -145,7 +146,7 @@ export const deleteSite = async (siteId: number): Promise<void> => {
 export const updateScopeStatus = async (
   siteScopeId: number, scopeStatusId: number, remarks?: string
 ): Promise<void> => {
-  const res = await fetch(URL.scopeStatus, {
+  const res = await fetch(MasterURL.scopeStatus, {
     method: "PATCH", headers: JSON_HEADERS,
     body: JSON.stringify({ siteScopeId, scopeStatusId, remarks }),
   });

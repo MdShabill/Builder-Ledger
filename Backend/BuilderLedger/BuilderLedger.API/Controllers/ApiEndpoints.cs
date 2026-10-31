@@ -64,7 +64,7 @@ namespace BuilderLedger.API.APIControllers
 
         public class MasterDataAPIEndpoints
         {
-            public const string MasterData = "master-data";
+            public const string MasterData = "";
             public const string GetServiceProviders = "service-providers";
             public const string UpdateScopeStatus = "scope-status";
         }

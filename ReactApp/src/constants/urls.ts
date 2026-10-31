@@ -29,11 +29,18 @@ export const API_URLS = {
     base: `${API_BASE_URL}/Site`,
     item: (id: number) => `${API_BASE_URL}/Site/${id}`,
     filter: `${API_BASE_URL}/Site/filter`,
-    masterData: `${API_BASE_URL}/Site/master-data`,
-    providers: `${API_BASE_URL}/Site/service-providers`,
-    scopeStatus: `${API_BASE_URL}/Site/scope-status`,
   },
 
+  allMasterData: {
+    base: `${API_BASE_URL}`,   
+    // MasterData: `${API_BASE_URL}/MasterData?siteStatusData=true&addressTypeData=true&countriesData=true&scopeMastersData=true&scopeStatusesData=true`,
+ 
+      MasterData: `${API_BASE_URL}/MasterData`,
+
+     providers: `${API_BASE_URL}/MasterData/service-providers`,
+
+     scopeStatus: `${API_BASE_URL}/Site/scope-status`,
+  },
   
   costMaster: {
   base: `${API_BASE_URL}/CostMaster`,
