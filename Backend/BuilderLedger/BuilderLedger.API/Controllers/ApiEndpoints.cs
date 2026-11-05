@@ -67,6 +67,7 @@ namespace BuilderLedger.API.APIControllers
             public const string MasterData = "";
             public const string GetServiceProviders = "service-providers";
             public const string UpdateScopeStatus = "scope-status";
+            public const string GetDropdownData = "dropdown-data";
         }
 
         public class SiteReportAPIEnpoints

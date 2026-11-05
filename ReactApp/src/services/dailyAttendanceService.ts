@@ -37,7 +37,7 @@ export const getDailyAttendances = async (
 
 export const getDropdownData = async (siteId: number): Promise<DropdownDataResponse> =>
   (await check(
-    await fetch(API_URLS.attendance.dropdown, 
+    await fetch(API_URLS.allMasterData.dropdown, 
       { headers: headers(siteId) }), "Failed to load dropdown data")).json();
 
 export const getCostByServiceType = async (siteId: number, serviceTypeId: number): Promise<CostByServiceTypeResponse> =>

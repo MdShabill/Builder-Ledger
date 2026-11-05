@@ -18,6 +18,8 @@ namespace BuilderLedger.API.Controllers
         private readonly ISiteScopeMasterRepository _siteScopeMasterRepository;
         private readonly ISiteScopeRepository _siteScopeRepository;
         private readonly IServiceProviderRepository _serviceProviderRepository;
+        private readonly ICostMasterRepository _costMasterRepository;
+        private readonly IServiceTypeRepository _serviceTypeRepository;
         private readonly ILogger<MasterDataController> _logger;
 
         public MasterDataController(
@@ -27,6 +29,8 @@ namespace BuilderLedger.API.Controllers
             ISiteScopeMasterRepository siteScopeMasterRepository,
             ISiteScopeRepository siteScopeRepository,
             IServiceProviderRepository serviceProviderRepository,
+            ICostMasterRepository costMasterRepository,
+            IServiceTypeRepository serviceTypeRepository,
             ILogger<MasterDataController> logger)
         {
             _siteStatusRepository = siteStatusRepository;
@@ -35,6 +39,8 @@ namespace BuilderLedger.API.Controllers
             _siteScopeMasterRepository = siteScopeMasterRepository;
             _siteScopeRepository = siteScopeRepository;
             _serviceProviderRepository = serviceProviderRepository;
+            _costMasterRepository = costMasterRepository;
+            _serviceTypeRepository = serviceTypeRepository;
             _logger = logger;
         }
 
@@ -173,6 +179,41 @@ namespace BuilderLedger.API.Controllers
             _siteScopeRepository.UpdateScopeStatus(dto.SiteScopeId, dto.ScopeStatusId, dto.Remarks, completedDate);
 
             return Ok("Scope status updated.");
+        }
+
+        // GET /api/DailyAttendanceAPI/dropdown-data
+        // Mirrors DropDownSelectList() — service types + cost per type for auto-fill
+        [HttpGet(MasterDataAPIEndpoints.GetDropdownData)]
+        public IActionResult GetDropdownData()
+        {
+            int siteId = GetSiteId();
+            if (siteId <= 0)
+                return BadRequest(new { message = "No site selected." });
+
+            List<ServiceType> serviceTypes = _serviceTypeRepository.GetAll();
+
+            var serviceTypeCosts = serviceTypes.Select(st => new
+            {
+                serviceTypeId = st.Id,
+                serviceTypeName = st.Name,
+                cost = _costMasterRepository.GetActiveCostDetail(st.Id, siteId)?.Cost ?? 0
+            }).ToList();
+
+            return Ok(new
+            {
+                serviceTypes = serviceTypes.Select(s => new { id = s.Id, name = s.Name }),
+                serviceTypeCosts
+            });
+        }
+
+        private int GetSiteId()
+        {
+            if (Request.Headers.TryGetValue("X-Site-Id", out var siteIdHeader)
+                && int.TryParse(siteIdHeader, out var siteId))
+            {
+                return siteId;
+            }
+            return 0;
         }
     }
 }

@@ -35,11 +35,13 @@ export const API_URLS = {
     base: `${API_BASE_URL}`,   
     // MasterData: `${API_BASE_URL}/MasterData?siteStatusData=true&addressTypeData=true&countriesData=true&scopeMastersData=true&scopeStatusesData=true`,
  
-      MasterData: `${API_BASE_URL}/MasterData`,
+    MasterData: `${API_BASE_URL}/MasterData`,
 
-     providers: `${API_BASE_URL}/MasterData/service-providers`,
+    providers: `${API_BASE_URL}/MasterData/service-providers`,
 
-     scopeStatus: `${API_BASE_URL}/Site/scope-status`,
+    scopeStatus: `${API_BASE_URL}/Site/scope-status`,
+
+    dropdown: `${API_BASE_URL}/MasterData/dropdown-data`,
   },
   
   costMaster: {
@@ -52,7 +54,7 @@ export const API_URLS = {
 
   attendance: {
     base: `${API_BASE_URL}/DailyAttendance`,
-    dropdown: `${API_BASE_URL}/DailyAttendance/dropdown-data`,
+    //dropdown: `${API_BASE_URL}/DailyAttendance/dropdown-data`,
     costByServiceType: `${API_BASE_URL}/DailyAttendance/GetCostByServiceType`,
   },
 

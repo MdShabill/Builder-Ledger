@@ -77,30 +77,30 @@ namespace BuilderLedger.API.Controllers
             return Ok(new { cost = 0, serviceProviders = new List<object>() });
         }
 
-        // GET /api/DailyAttendanceAPI/dropdown-data
-        // Mirrors DropDownSelectList() — service types + cost per type for auto-fill
-        [HttpGet(DilyAttendanceAPIEnpoints.GetDropdownData)]
-        public IActionResult GetDropdownData()
-        {
-            int siteId = GetSiteId();
-            if (siteId <= 0)
-                return BadRequest(new { message = "No site selected." });
+        //// GET /api/DailyAttendanceAPI/dropdown-data
+        //// Mirrors DropDownSelectList() — service types + cost per type for auto-fill
+        //[HttpGet(DilyAttendanceAPIEnpoints.GetDropdownData)]
+        //public IActionResult GetDropdownData()
+        //{
+        //    int siteId = GetSiteId();
+        //    if (siteId <= 0)
+        //        return BadRequest(new { message = "No site selected." });
 
-            List<ServiceType> serviceTypes = _serviceTypeRepository.GetAll();
+        //    List<ServiceType> serviceTypes = _serviceTypeRepository.GetAll();
 
-            var serviceTypeCosts = serviceTypes.Select(st => new
-            {
-                serviceTypeId = st.Id,
-                serviceTypeName = st.Name,
-                cost = _costMasterRepository.GetActiveCostDetail(st.Id, siteId)?.Cost ?? 0
-            }).ToList();
+        //    var serviceTypeCosts = serviceTypes.Select(st => new
+        //    {
+        //        serviceTypeId = st.Id,
+        //        serviceTypeName = st.Name,
+        //        cost = _costMasterRepository.GetActiveCostDetail(st.Id, siteId)?.Cost ?? 0
+        //    }).ToList();
 
-            return Ok(new
-            {
-                serviceTypes = serviceTypes.Select(s => new { id = s.Id, name = s.Name }),
-                serviceTypeCosts
-            });
-        }
+        //    return Ok(new
+        //    {
+        //        serviceTypes = serviceTypes.Select(s => new { id = s.Id, name = s.Name }),
+        //        serviceTypeCosts
+        //    });
+        //}
 
         // POST /api/DailyAttendanceAPI
         [HttpPost(DilyAttendanceAPIEnpoints.Add)]
