@@ -64,17 +64,9 @@ namespace BuilderLedger.API.Controllers
         public IActionResult GetAll()
         {
             _logger.LogInformation("API Action: GetAll | Invoked: {InvokedAt}", DateTime.Now.ToString("HH:mm:ss.fff"));
-
-            const string cacheKey = "AllSites";
-
-            List<Site> sites;
-            if (!_cache.TryGetValue(cacheKey, out sites))
-            {
-                sites = _siteRepository.GetAll();
-                var cacheEntryOptions = new MemoryCacheEntryOptions()
-                    .SetSlidingExpiration(TimeSpan.FromMinutes(10));
-                _cache.Set(cacheKey, sites, cacheEntryOptions);
-            }
+            
+            List<Site> sites = _siteRepository.GetAll();
+                
             var siteDto = _imapper.Map<List<Site>, List<SiteDTO>>(sites);
 
             _logger.LogInformation("\nTotal Site: {TotalSite}", sites?.Count ?? 0);
