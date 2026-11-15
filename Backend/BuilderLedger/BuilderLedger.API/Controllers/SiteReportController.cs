@@ -16,7 +16,7 @@ namespace BuilderLedger.API.Controllers
             _pdfService = pdfService;
         }
 
-        [HttpPost(SiteReportAPIEnpoints.GeneratePdf)]
+        [HttpPost(SiteReportAPIEndpoints.GeneratePdf)]
         public async Task<IActionResult> GeneratePdf([FromBody] GeneratePdfRequestDTO pdfRequestDto)
         {
             if (pdfRequestDto == null || string.IsNullOrWhiteSpace(pdfRequestDto.Html))

@@ -11,7 +11,7 @@ namespace BuilderLedger.API.DTO
         public DateTime? StartedDate { get; set; }
         public int SiteStatusId { get; set; }
         public string? Status { get; set; }
-        public string Note { get; set; }
+        public string? Note { get; set; }
 
         public int? ServiceProviderId { get; set; }
         public string? DisplayName { get; set; }

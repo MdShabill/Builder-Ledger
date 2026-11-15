@@ -37,7 +37,7 @@ namespace BuilderLedger.API.Controllers
         }
 
         // GET /api/CostMasterAPI?serviceTypeId=3
-        [HttpGet(CostMasterAPIEnpoints.Index)]
+        [HttpGet(CostMasterAPIEndpoints.Index)]
         public IActionResult Index(int? serviceTypeId)
         {
             int siteId = GetSiteId();
@@ -67,7 +67,7 @@ namespace BuilderLedger.API.Controllers
 
 
         // GET /api/CostMasterAPI/GetActiveCost?serviceTypeId=3
-        [HttpGet(CostMasterAPIEnpoints.GetActiveCost)]
+        [HttpGet(CostMasterAPIEndpoints.GetActiveCost)]
         public IActionResult GetActiveCost(int serviceTypeId)
         {
             int siteId = GetSiteId();
@@ -87,7 +87,7 @@ namespace BuilderLedger.API.Controllers
         }
 
         // GET /api/CostMasterAPI/5
-        [HttpGet(CostMasterAPIEnpoints.GetById)]
+        [HttpGet(CostMasterAPIEndpoints.GetById)]
         public IActionResult GetById(int id)
         {
             int siteId = GetSiteId();
@@ -103,7 +103,7 @@ namespace BuilderLedger.API.Controllers
         }
 
         // POST /api/CostMasterAPI
-        [HttpPost(CostMasterAPIEnpoints.Add)]
+        [HttpPost(CostMasterAPIEndpoints.Add)]
         public IActionResult Add([FromBody] CostMasterDTO costMasterDto)
         {
             int siteId = GetSiteId();
@@ -129,7 +129,7 @@ namespace BuilderLedger.API.Controllers
         }
 
         // PUT /api/CostMasterAPI/5
-        [HttpPut(CostMasterAPIEnpoints.Update)]
+        [HttpPut(CostMasterAPIEndpoints.Update)]
         public IActionResult Update(int id, [FromBody] CostMasterDTO costMasterDto)
         {
             int siteId = GetSiteId();
@@ -156,7 +156,7 @@ namespace BuilderLedger.API.Controllers
         }
 
         // DELETE /api/CostMasterAPI/5
-        [HttpDelete(CostMasterAPIEnpoints.Delete)]
+        [HttpDelete(CostMasterAPIEndpoints.Delete)]
         public IActionResult Delete(int id)
         {
             int siteId = GetSiteId();

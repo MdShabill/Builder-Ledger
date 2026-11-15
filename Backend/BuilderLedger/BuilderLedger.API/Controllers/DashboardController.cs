@@ -17,7 +17,7 @@ namespace BuilderLedger.API.Controllers
             _dashboardRepository = dashboardRepository;
         }
 
-        [HttpGet(DashbordAPIEnpoints.GetStats)]
+        [HttpGet(DashbordAPIEndpoints.GetStats)]
         public IActionResult GetStats([FromQuery] int siteId = 0)
         {
             DashboardStats stats = _dashboardRepository.GetStats(siteId);
@@ -114,7 +114,7 @@ namespace BuilderLedger.API.Controllers
             });
         }
 
-        [HttpGet(DashbordAPIEnpoints.GetScopeItems)]
+        [HttpGet(DashbordAPIEndpoints.GetScopeItems)]
         public IActionResult GetScopeItems([FromQuery] int siteId)
         {
             if (siteId <= 0)
@@ -124,7 +124,7 @@ namespace BuilderLedger.API.Controllers
             return Ok(items);
         }
 
-        [HttpGet(DashbordAPIEnpoints.GetMonthlyActivity)]
+        [HttpGet(DashbordAPIEndpoints.GetMonthlyActivity)]
         public IActionResult GetMonthlyActivity(int siteId, int month, int year)
         {
             if (siteId <= 0)

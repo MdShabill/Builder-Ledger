@@ -38,7 +38,7 @@ namespace BuilderLedger.API.Controllers
             _imapper = config.CreateMapper();
         }
 
-        [HttpGet(MaterialPurchaseAPIEnpoints.Index)]
+        [HttpGet(MaterialPurchaseAPIEndpoints.Index)]
         public IActionResult Index(DateTime? dateFrom, DateTime? dateTo, int? materialId,
                                    int? supplierId, int? brandId)
         {
@@ -55,7 +55,7 @@ namespace BuilderLedger.API.Controllers
         }
 
         //This API Should Shift Into MasterController
-        [HttpGet(MaterialPurchaseAPIEnpoints.DropdownData)]
+        [HttpGet(MaterialPurchaseAPIEndpoints.DropdownData)]
         public IActionResult GetDropdownData()
         {
             return Ok(new
@@ -68,7 +68,7 @@ namespace BuilderLedger.API.Controllers
             });
         }
 
-        [HttpGet(MaterialPurchaseAPIEnpoints.GetMaterialInfo)]
+        [HttpGet(MaterialPurchaseAPIEndpoints.GetMaterialInfo)]
         public IActionResult GetMaterialInfo(int materialId)
         {
             if (materialId <= 0)
@@ -85,7 +85,7 @@ namespace BuilderLedger.API.Controllers
             });
         }
 
-        [HttpPost(MaterialPurchaseAPIEnpoints.Add)]
+        [HttpPost(MaterialPurchaseAPIEndpoints.Add)]
         public IActionResult Add([FromBody] MaterialPurchaseDTO Dto)
         {
             int siteId = GetSiteId();
@@ -106,7 +106,7 @@ namespace BuilderLedger.API.Controllers
             return StatusCode(500, new { message = "Failed to insert record" });
         }
 
-        [HttpDelete(MaterialPurchaseAPIEnpoints.Delete)]
+        [HttpDelete(MaterialPurchaseAPIEndpoints.Delete)]
         public IActionResult Delete(int id)
         {
             if (id <= 0)

@@ -39,7 +39,7 @@ namespace BuilderLedger.API.Controllers
         }
 
         // GET /api/DailyAttendanceAPI?dateFrom=2023-01-01&dateTo=2023-12-31
-        [HttpGet(DilyAttendanceAPIEnpoints.Index)]
+        [HttpGet(DilyAttendanceAPIEndpoints.Index)]
         public IActionResult Index([FromQuery] DateTime? dateFrom, [FromQuery] DateTime? dateTo)
         {
             int siteId = GetSiteId();
@@ -53,7 +53,7 @@ namespace BuilderLedger.API.Controllers
         }
 
         // GET /api/DailyAttendanceAPI/GetCostByServiceType?serviceTypeId=3
-        [HttpGet(DilyAttendanceAPIEnpoints.GetCostByServiceType)]
+        [HttpGet(DilyAttendanceAPIEndpoints.GetCostByServiceType)]
         public IActionResult GetCostByServiceType(int serviceTypeId = 0)
         {
             int siteId = GetSiteId();
@@ -103,7 +103,7 @@ namespace BuilderLedger.API.Controllers
         //}
 
         // POST /api/DailyAttendanceAPI
-        [HttpPost(DilyAttendanceAPIEnpoints.Add)]
+        [HttpPost(DilyAttendanceAPIEndpoints.Add)]
         public IActionResult Add([FromBody] DailyAttendanceDTO dailyAttendanceDto)
         {
             int siteId = GetSiteId();

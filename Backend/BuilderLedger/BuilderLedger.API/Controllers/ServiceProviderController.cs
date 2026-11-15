@@ -45,7 +45,7 @@ namespace BuilderLedger.API.Controllers
             _imapper = config.CreateMapper();
         }
 
-        [HttpGet(ServiceProviderAPIEnpoints.Index)]
+        [HttpGet(ServiceProviderAPIEndpoints.Index)]
         public IActionResult Index(int? serviceTypeId, int? id)
         {
             List<Core.DataModels.ServiceProvider> serviceProviders =
@@ -55,7 +55,7 @@ namespace BuilderLedger.API.Controllers
             return Ok(new { items = serviceProviderDto, totalCount = serviceProviderDto.Count });
         }
 
-        [HttpGet(ServiceProviderAPIEnpoints.GetById)]
+        [HttpGet(ServiceProviderAPIEndpoints.GetById)]
         public IActionResult GetById(int id)
         {
             List<Core.DataModels.ServiceProvider> serviceProviders = _serviceProviderRepository.GetAll(null, id);
@@ -66,7 +66,7 @@ namespace BuilderLedger.API.Controllers
             return Ok(serviceProviderDto);
         }
 
-        [HttpPost(ServiceProviderAPIEnpoints.Add)]
+        [HttpPost(ServiceProviderAPIEndpoints.Add)]
         public IActionResult Add([FromBody] ServiceProviderDTO serviceProviderDto)
         {
             string error = Validate(serviceProviderDto);
@@ -87,7 +87,7 @@ namespace BuilderLedger.API.Controllers
             return StatusCode(500, new { message = "Failed to insert record" });
         }
 
-        [HttpPut(ServiceProviderAPIEnpoints.Update)]
+        [HttpPut(ServiceProviderAPIEndpoints.Update)]
         public IActionResult Update(int id, [FromBody] ServiceProviderDTO serviceProviderDto)
         {
             string error = Validate(serviceProviderDto);
@@ -108,7 +108,7 @@ namespace BuilderLedger.API.Controllers
             return BadRequest(new { message = "Update failed." });
         }
 
-        [HttpDelete(ServiceProviderAPIEnpoints.Delete)]
+        [HttpDelete(ServiceProviderAPIEndpoints.Delete)]
         public IActionResult Delete(int id)
         {
             using var transaction = new TransactionScope();
@@ -127,7 +127,7 @@ namespace BuilderLedger.API.Controllers
         }
 
         //This API Should Shift Into MasterController
-        [HttpGet(ServiceProviderAPIEnpoints.DropdownData)]
+        [HttpGet(ServiceProviderAPIEndpoints.DropdownData)]
         public IActionResult GetDropdownData()
         {
             return Ok(new

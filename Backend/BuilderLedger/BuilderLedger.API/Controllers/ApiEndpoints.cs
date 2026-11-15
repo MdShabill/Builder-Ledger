@@ -7,7 +7,7 @@ namespace BuilderLedger.API.APIControllers
             public const string Login = "login";
         }
 
-        public class CostMasterAPIEnpoints
+        public class CostMasterAPIEndpoints
         {
             public const string Index = "Index";
             public const string GetActiveCost = "GetActiveCost";
@@ -17,7 +17,7 @@ namespace BuilderLedger.API.APIControllers
             public const string Delete = "{id:int}";
         }
 
-        public class DilyAttendanceAPIEnpoints
+        public class DilyAttendanceAPIEndpoints
         {
             public const string Index = "";
             public const string GetCostByServiceType = "GetCostByServiceType";
@@ -25,14 +25,14 @@ namespace BuilderLedger.API.APIControllers
             public const string Add = "";
         }
 
-        public class DashbordAPIEnpoints
+        public class DashbordAPIEndpoints
         {
             public const string GetStats = "Stats";
             public const string GetScopeItems = "scope-items";
             public const string GetMonthlyActivity = "monthly-activity";
         }
 
-        public class MaterialPurchaseAPIEnpoints
+        public class MaterialPurchaseAPIEndpoints
         {
             public const string Index = "";
             public const string DropdownData = "dropdown-data";
@@ -41,7 +41,7 @@ namespace BuilderLedger.API.APIControllers
             public const string Delete = "{id}";
         }
 
-        public class ServiceProviderAPIEnpoints
+        public class ServiceProviderAPIEndpoints
         {
             public const string Index = "";
             public const string GetById = "{id}";
@@ -51,14 +51,14 @@ namespace BuilderLedger.API.APIControllers
             public const string DropdownData = "dropdown-data";
         }
 
-        public class SiteAPIEnpoints
+        public class SiteAPIEndpoints
         {
             public const string GetAll = "";
             public const string FilterSites = "filter";
             public const string Add = "";
             public const string Edit = "{id:int}";
             public const string Update = "{id:int}";
-            public const string Delete = "{id:int}";
+            public const string Delete = "{siteId:int}";
         }
 
 
@@ -70,7 +70,7 @@ namespace BuilderLedger.API.APIControllers
             public const string GetDropdownData = "dropdown-data";
         }
 
-        public class SiteReportAPIEnpoints
+        public class SiteReportAPIEndpoints
         {
             public const string GeneratePdf = "generate-pdf";
         }

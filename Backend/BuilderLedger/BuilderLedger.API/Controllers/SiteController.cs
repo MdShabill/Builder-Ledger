@@ -60,7 +60,7 @@ namespace BuilderLedger.API.Controllers
         }
 
         // GET api/Site
-        [HttpGet(SiteAPIEnpoints.GetAll)]
+        [HttpGet(SiteAPIEndpoints.GetAll)]
         public IActionResult GetAll()
         {
             _logger.LogInformation("API Action: GetAll | Invoked: {InvokedAt}", DateTime.Now.ToString("HH:mm:ss.fff"));
@@ -75,7 +75,7 @@ namespace BuilderLedger.API.Controllers
         }
 
         // GET api/Site/filter?search=&statusId=&fromDate=&toDate=&budgetFrom=&budgetTo=
-        [HttpGet(SiteAPIEnpoints.FilterSites)]
+        [HttpGet(SiteAPIEndpoints.FilterSites)]
         public IActionResult FilterSites(string? search, int? statusId, DateTime? fromDate, DateTime? toDate,
                                          decimal? budgetFrom, decimal? budgetTo)
         {
@@ -102,7 +102,7 @@ namespace BuilderLedger.API.Controllers
         }
 
         // POST api/Site
-        [HttpPost(SiteAPIEnpoints.Add)]
+        [HttpPost(SiteAPIEndpoints.Add)]
         public IActionResult Add(SiteDTO siteDto)
         {
             _logger.LogInformation("API Action: Add | Started: {StartedAt}", DateTime.Now.ToString("HH:mm:ss.fff"));
@@ -165,7 +165,7 @@ namespace BuilderLedger.API.Controllers
 
 
         // GET api/Site/2
-        [HttpGet(SiteAPIEnpoints.Edit)]
+        [HttpGet(SiteAPIEndpoints.Edit)]
         public IActionResult Edit(int id)
         {
             _logger.LogInformation("API Action: Edit | Invoked: {InvokedAt}", DateTime.Now.ToString("HH:mm:ss.fff"));
@@ -205,7 +205,7 @@ namespace BuilderLedger.API.Controllers
         }
 
         // PUT api/Site/2
-        [HttpPut(SiteAPIEnpoints.Update)]
+        [HttpPut(SiteAPIEndpoints.Update)]
         public async Task<IActionResult> Update(int id, [FromBody] SiteDTO siteDto)
         {
             _logger.LogInformation("API Action: Update | Invoked: {InvokedAt}", DateTime.Now.ToString("HH:mm:ss.fff"));
@@ -268,7 +268,7 @@ namespace BuilderLedger.API.Controllers
         }
 
         // DELETE api/Site/3
-        [HttpDelete(SiteAPIEnpoints.Delete)]
+        [HttpDelete(SiteAPIEndpoints.Delete)]
         public async Task<IActionResult> Delete(int siteId)
         {
             _logger.LogInformation("API Action: Delete | Invoked: {InvokedAt}", DateTime.Now.ToString("HH:mm:ss.fff"));

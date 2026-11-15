@@ -49,7 +49,7 @@ namespace BuilderLedger.Repository.Dapper
             {
                 string query = @"SELECT 
                         Sites.Id, Sites.Name, Sites.ContactName, Sites.ContactNumber, Sites.StartedDate,
-                        Sites.SiteStatusId, Sites.ExpectedBudget, Sites.ExpectedCompletionDate,
+                        Sites.SiteStatusId, Sites.Note, Sites.ExpectedBudget, Sites.ExpectedCompletionDate,
                         SiteStatus.Status, Addresses.AddressLine1, Addresses.AddressTypeId,
                         AddressTypes.Name AS AddressTypes, Addresses.CountryId,
                         Countries.Name AS CountryName, Addresses.PinCode
@@ -98,11 +98,11 @@ namespace BuilderLedger.Repository.Dapper
             {
                 string query = @"SELECT 
                         Sites.Id, Sites.Name, Sites.ContactName, Sites.ContactNumber,
-                        Sites.StartedDate, Sites.ExpectedBudget, 
+                        Sites.StartedDate, Sites.ExpectedBudget, Sites.Note,
                         Sites.ExpectedCompletionDate, Sites.SiteStatusId, 
-                        SiteStatus.Status, Addresses.AddressLine1, 
-                        AddressTypes.Name AS AddressTypes, Countries.Name AS CountryName, 
-                        Addresses.PinCode
+                        SiteStatus.Status, Addresses.AddressLine1, Addresses.AddressTypeId,
+                        AddressTypes.Name AS AddressTypes, Addresses.CountryId,
+                        Countries.Name AS CountryName, Addresses.PinCode
                     FROM 
                         Sites
                     LEFT JOIN 
