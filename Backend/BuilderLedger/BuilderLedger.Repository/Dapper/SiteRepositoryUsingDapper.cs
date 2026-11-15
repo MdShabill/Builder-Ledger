@@ -22,7 +22,7 @@ namespace BuilderLedger.Repository.Dapper
                 string query = @"SELECT 
                          Sites.Id, Sites.Name, Sites.ContactName, Sites.ContactNumber,
                          Sites.StartedDate, Sites.SiteStatusId, Sites.ExpectedBudget, 
-                         Sites.ExpectedCompletionDate, SiteStatus.Status, 
+                         Sites.Note, Sites.ExpectedCompletionDate, SiteStatus.Status, 
                          Addresses.AddressLine1, Addresses.AddressTypeId, 
                          AddressTypes.Name AS AddressTypes, Addresses.CountryId, 
                          Countries.Name AS CountryName, Addresses.PinCode
