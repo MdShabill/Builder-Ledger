@@ -60,19 +60,37 @@ namespace BuilderLedger.API.Controllers
         }
 
         // GET api/Site
+
         [HttpGet(SiteAPIEndpoints.GetAll)]
-        public IActionResult GetAll()
+        public IActionResult GetAll(int pageNumber = 1, int pageSize = 10)
         {
             _logger.LogInformation("API Action: GetAll | Invoked: {InvokedAt}", DateTime.Now.ToString("HH:mm:ss.fff"));
-            
-            List<Site> sites = _siteRepository.GetAll();
-                
-            var siteDto = _imapper.Map<List<Site>, List<SiteDTO>>(sites);
 
-            _logger.LogInformation("\nTotal Site: {TotalSite}", sites?.Count ?? 0);
+            // Validate pagination parameters
+            if (pageNumber < 1)
+                return BadRequest("Page number must be greater than 0.");
 
-            return Ok(siteDto);
+            if (pageSize < 1 || pageSize > 100)
+                return BadRequest("Page size must be between 1 and 100.");
+
+            (List<Site> Sites, int TotalCount) site = _siteRepository.GetAll(pageNumber, pageSize);
+
+            var siteDto = _imapper.Map<List<Site>, List<SiteDTO>>(site.Sites);
+
+            int totalPages = (int)Math.Ceiling((double)site.TotalCount / pageSize);
+
+            _logger.LogInformation("Total Sites: {TotalCount}, Page: {PageNumber}", site.TotalCount, pageNumber);
+
+            return Ok(new
+            {
+                items = siteDto,
+                totalCount = site.TotalCount,
+                pageNumber = pageNumber,
+                pageSize = pageSize,
+                totalPages = totalPages
+            });
         }
+
 
         // GET api/Site/filter?search=&statusId=&fromDate=&toDate=&budgetFrom=&budgetTo=
         [HttpGet(SiteAPIEndpoints.FilterSites)]

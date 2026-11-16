@@ -15,32 +15,42 @@ namespace BuilderLedger.Repository.Dapper
             _connectionString = connectionString;
         }
 
-        public List<Site> GetAll()
+
+        public (List<Site> Sites, int TotalCount) GetAll(int pageNumber, int pageSize)
         {
             using (IDbConnection db = new SqlConnection(_connectionString))
             {
-                string query = @"SELECT 
-                         Sites.Id, Sites.Name, Sites.ContactName, Sites.ContactNumber,
-                         Sites.StartedDate, Sites.SiteStatusId, Sites.ExpectedBudget, 
-                         Sites.Note, Sites.ExpectedCompletionDate, SiteStatus.Status, 
-                         Addresses.AddressLine1, Addresses.AddressTypeId, 
-                         AddressTypes.Name AS AddressTypes, Addresses.CountryId, 
-                         Countries.Name AS CountryName, Addresses.PinCode
-                     FROM 
-                         Sites
-                     LEFT JOIN 
-                         SiteStatus ON Sites.SiteStatusId = SiteStatus.Id
-                     LEFT JOIN 
-                         Addresses ON Sites.Id = Addresses.SiteId
-                     LEFT JOIN   
-                         AddressTypes ON Addresses.AddressTypeId = AddressTypes.Id
-                     LEFT JOIN 
-                         Countries ON Addresses.CountryId = Countries.Id";
+                int offset = (pageNumber - 1) * pageSize;
 
-                var result = db.Query<Site>(query).AsList();
-                return result;
+                string query = @"SELECT COUNT(*) FROM Sites;
+
+                        SELECT Sites.Id, Sites.Name, Sites.ContactName, Sites.ContactNumber,
+                               Sites.StartedDate, Sites.SiteStatusId, Sites.ExpectedBudget,
+                               Sites.Note, Sites.ExpectedCompletionDate, SiteStatus.Status,
+                               Addresses.AddressLine1, Addresses.AddressTypeId,
+                               AddressTypes.Name AS AddressTypes, Addresses.CountryId,
+                               Countries.Name AS CountryName, Addresses.PinCode
+                        FROM
+                            Sites
+                        LEFT JOIN SiteStatus ON Sites.SiteStatusId = SiteStatus.Id
+                        LEFT JOIN Addresses ON Sites.Id = Addresses.SiteId
+                        LEFT JOIN AddressTypes ON Addresses.AddressTypeId = AddressTypes.Id
+                        LEFT JOIN Countries ON Addresses.CountryId = Countries.Id
+                        ORDER BY Sites.Id ASC
+                        OFFSET @Offset ROWS
+                        FETCH NEXT @PageSize ROWS ONLY; ";
+
+                using (var multi = db.QueryMultiple(query, new{ Offset = offset, PageSize = pageSize}))
+                {
+                    int totalCount = multi.Read<int>().Single();
+
+                    List<Site> sites = multi.Read<Site>().AsList();
+
+                    return (sites, totalCount);
+                }
             }
         }
+
 
         public List<Site> GetSites(string? search, int? statusId, DateTime? fromDate,
                                    DateTime? toDate, decimal? budgetFrom, decimal? budgetTo)
