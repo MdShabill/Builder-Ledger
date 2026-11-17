@@ -61,36 +61,44 @@ namespace BuilderLedger.API.Controllers
 
         // GET api/Site
 
+
         [HttpGet(SiteAPIEndpoints.GetAll)]
-        public IActionResult GetAll(int pageNumber = 1, int pageSize = 10)
+        public IActionResult GetAll( int pageNumber = 1, int pageSize = 10,
+                                     string sortColumn = "Id", string sortOrder = "DESC")
         {
             _logger.LogInformation("API Action: GetAll | Invoked: {InvokedAt}", DateTime.Now.ToString("HH:mm:ss.fff"));
 
-            // Validate pagination parameters
             if (pageNumber < 1)
                 return BadRequest("Page number must be greater than 0.");
 
             if (pageSize < 1 || pageSize > 100)
                 return BadRequest("Page size must be between 1 and 100.");
 
-            (List<Site> Sites, int TotalCount) site = _siteRepository.GetAll(pageNumber, pageSize);
+            string[] allowedColumns = { "Id", "Name", "StartedDate", "ExpectedCompletionDate",
+                                        "ExpectedBudget", "Status" };
+
+            if (!allowedColumns.Contains(sortColumn, StringComparer.OrdinalIgnoreCase))
+                return BadRequest("Invalid sorting column.");
+
+            // Validate sorting order
+            if (!sortOrder.Equals("ASC", StringComparison.OrdinalIgnoreCase) &&
+                !sortOrder.Equals("DESC", StringComparison.OrdinalIgnoreCase))
+            {
+                return BadRequest("Sort order must be ASC or DESC.");
+            }
+
+            var site = _siteRepository.GetAll(pageNumber, pageSize, sortColumn, sortOrder);
 
             var siteDto = _imapper.Map<List<Site>, List<SiteDTO>>(site.Sites);
 
             int totalPages = (int)Math.Ceiling((double)site.TotalCount / pageSize);
 
-            _logger.LogInformation("Total Sites: {TotalCount}, Page: {PageNumber}", site.TotalCount, pageNumber);
+            _logger.LogInformation("Total Sites: {TotalCount}, Page: {PageNumber}, Sort: {SortColumn} {SortOrder}",
+                                    site.TotalCount, pageNumber, sortColumn, sortOrder);
 
-            return Ok(new
-            {
-                items = siteDto,
-                totalCount = site.TotalCount,
-                pageNumber = pageNumber,
-                pageSize = pageSize,
-                totalPages = totalPages
-            });
+            return Ok(new { items = siteDto, totalCount = site.TotalCount, pageNumber, pageSize,
+                            totalPages, sortColumn, sortOrder });
         }
-
 
         // GET api/Site/filter?search=&statusId=&fromDate=&toDate=&budgetFrom=&budgetTo=
         [HttpGet(SiteAPIEndpoints.FilterSites)]

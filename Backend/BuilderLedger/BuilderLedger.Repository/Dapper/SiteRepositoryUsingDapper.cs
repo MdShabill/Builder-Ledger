@@ -16,31 +16,57 @@ namespace BuilderLedger.Repository.Dapper
         }
 
 
-        public (List<Site> Sites, int TotalCount) GetAll(int pageNumber, int pageSize)
+
+        public (List<Site> Sites, int TotalCount) GetAll(int pageNumber, int pageSize, string sortColumn, string sortOrder)
         {
             using (IDbConnection db = new SqlConnection(_connectionString))
             {
                 int offset = (pageNumber - 1) * pageSize;
 
-                string query = @"SELECT COUNT(*) FROM Sites;
+                // Allowed sorting columns
+                var sortColumns = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+                {
+                    { "Id", "Sites.Id" }, { "Name", "Sites.Name" },
+                    { "StartedDate", "Sites.StartedDate" },
+                    { "ExpectedCompletionDate", "Sites.ExpectedCompletionDate" },
+                    { "ExpectedBudget", "Sites.ExpectedBudget" },
+                    { "Status", "SiteStatus.Status" }
+                };
 
-                        SELECT Sites.Id, Sites.Name, Sites.ContactName, Sites.ContactNumber,
-                               Sites.StartedDate, Sites.SiteStatusId, Sites.ExpectedBudget,
-                               Sites.Note, Sites.ExpectedCompletionDate, SiteStatus.Status,
-                               Addresses.AddressLine1, Addresses.AddressTypeId,
-                               AddressTypes.Name AS AddressTypes, Addresses.CountryId,
-                               Countries.Name AS CountryName, Addresses.PinCode
-                        FROM
-                            Sites
-                        LEFT JOIN SiteStatus ON Sites.SiteStatusId = SiteStatus.Id
-                        LEFT JOIN Addresses ON Sites.Id = Addresses.SiteId
-                        LEFT JOIN AddressTypes ON Addresses.AddressTypeId = AddressTypes.Id
-                        LEFT JOIN Countries ON Addresses.CountryId = Countries.Id
-                        ORDER BY Sites.Id ASC
-                        OFFSET @Offset ROWS
-                        FETCH NEXT @PageSize ROWS ONLY; ";
+                if (!sortColumns.TryGetValue(sortColumn, out string? column))
+                {
+                    throw new ArgumentException("Invalid sorting column.");
+                }
 
-                using (var multi = db.QueryMultiple(query, new{ Offset = offset, PageSize = pageSize}))
+                sortOrder = sortOrder.ToUpperInvariant();
+
+                if (sortOrder != "ASC" && sortOrder != "DESC")
+                {
+                    throw new ArgumentException("Invalid sorting order.");
+                }
+
+                string orderBy = column == "Sites.Id" ? $"{column} {sortOrder}" : $"{column} {sortOrder}, Sites.Id DESC";
+
+                string query = $@"SELECT COUNT(*) FROM Sites;
+                       SELECT Sites.Id, Sites.Name, Sites.ContactName, Sites.ContactNumber,
+                              Sites.StartedDate, Sites.SiteStatusId, Sites.ExpectedBudget,
+                              Sites.Note, Sites.ExpectedCompletionDate, SiteStatus.Status,
+                              Addresses.AddressLine1, Addresses.AddressTypeId,
+                              AddressTypes.Name AS AddressTypes, Addresses.CountryId,
+                              Countries.Name AS CountryName, Addresses.PinCode
+                       FROM
+                           Sites
+                       LEFT JOIN SiteStatus ON Sites.SiteStatusId = SiteStatus.Id
+                       LEFT JOIN Addresses ON Sites.Id = Addresses.SiteId
+                       LEFT JOIN AddressTypes ON Addresses.AddressTypeId = AddressTypes.Id
+                       LEFT JOIN Countries ON Addresses.CountryId = Countries.Id
+
+                       ORDER BY {orderBy}
+                       OFFSET @Offset ROWS
+                       FETCH NEXT @PageSize ROWS ONLY;";
+
+                using (SqlMapper.GridReader multi = db.QueryMultiple(query, new
+                      { Offset = offset, PageSize = pageSize }))
                 {
                     int totalCount = multi.Read<int>().Single();
 
@@ -50,7 +76,6 @@ namespace BuilderLedger.Repository.Dapper
                 }
             }
         }
-
 
         public List<Site> GetSites(string? search, int? statusId, DateTime? fromDate,
                                    DateTime? toDate, decimal? budgetFrom, decimal? budgetTo)

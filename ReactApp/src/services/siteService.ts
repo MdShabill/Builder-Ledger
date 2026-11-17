@@ -1,3 +1,4 @@
+
 import { API_URLS } from "../constants/urls";
 
 const URL = API_URLS.site;
@@ -17,11 +18,9 @@ export interface SiteScopeVm {
   id: number; siteScopeMasterId: number; scopeName: string;
   scopeStatusId: number; statusName: string; remarks?: string; completedDate?: string;
 }
-
 export interface ScopeItemDto {
   siteScopeMasterId: number; scopeStatusId: number; remarks?: string;
 }
-
 export interface SiteListDto {
   id: number; name: string; startedDate: string;
   contactName?: string; contactNumber?: string; siteStatusId?: number;
@@ -30,6 +29,10 @@ export interface SiteListDto {
   expectedCompletionDate?: string;
 }
 
+// Sorting
+export type SiteSortColumn = "Id" | "Name" | "StartedDate" | "Status";
+export type SortOrder = "ASC" | "DESC";
+
 // Pagination response
 export interface PaginatedResponse<T> {
   items: T[];
@@ -37,6 +40,8 @@ export interface PaginatedResponse<T> {
   pageNumber: number;
   pageSize: number;
   totalPages: number;
+  sortColumn?: string;
+  sortOrder?: string;
 }
 
 export interface SiteEditDto extends SiteListDto {
@@ -44,7 +49,6 @@ export interface SiteEditDto extends SiteListDto {
   plumberIds: number[]; painterIds: number[]; carpenterIds: number[];
   tilerIds: number[]; scopes: SiteScopeVm[];
 }
-
 export interface SiteCreateDto {
   name: string; startedDate: string; siteStatusId: number;
   contactName?: string; contactNumber?: string; note?: string;
@@ -55,25 +59,21 @@ export interface SiteCreateDto {
   selectedPainterIds: number[]; selectedCarpenterIds: number[];
   selectedTilerIds: number[]; selectedScopes: ScopeItemDto[];
 }
-
 export interface DropdownResponse {
   statuses: DropdownItem[]; addressTypes: DropdownItem[];
   countries: DropdownItem[]; scopeMasters: ScopeMasterOption[];
   scopeStatuses: ScopeStatusOption[];
 }
-
 export interface ServiceProviderResponse {
   masterMasons: ProviderApiOption[]; electricians: ProviderApiOption[];
   labours: ProviderOption[]; plumbers: ProviderOption[];
   painters: ProviderOption[]; carpenters: ProviderOption[];
   tilers: ProviderOption[];
 }
-
 export interface SiteFilterParams {
   search?: string; statusId?: number; fromDate?: string; toDate?: string;
   budgetFrom?: number; budgetTo?: number;
 }
-
 export interface SiteMasterDataParams {
   siteStatusData?: boolean; addressTypeData?: boolean;
   countriesData?: boolean; scopeMastersData?: boolean;
@@ -105,14 +105,18 @@ export const getNavbarSites = async (): Promise<SiteDropdownDto[]> => {
   return result.items.map(({ id, name }) => ({ id, name }));
 };
 
-// GET /Site - Paginated sites
+// GET /Site - Paginated and sorted sites
 export const getAllSites = (
   pageNumber: number = 1,
-  pageSize: number = 10
+  pageSize: number = 10,
+  sortColumn: SiteSortColumn = "Id",
+  sortOrder: SortOrder = "DESC"
 ): Promise<PaginatedResponse<SiteListDto>> => {
   const params = new URLSearchParams({
     pageNumber: String(pageNumber),
-    pageSize: String(pageSize)
+    pageSize: String(pageSize),
+    sortColumn,
+    sortOrder
   });
 
   return fetchJson<PaginatedResponse<SiteListDto>>(
@@ -133,7 +137,6 @@ export const getMasterData = (
   Object.entries(options).forEach(([key, value]) => {
     if (value === true) params.append(key, "true");
   });
-
   return fetchJson<DropdownResponse>(
     `${MasterURL.MasterData}?${params}`,
     "Failed to fetch master data"
@@ -150,11 +153,8 @@ export const getServiceProviders = () =>
 // POST /Site
 export const createSite = async (payload: SiteCreateDto): Promise<number> => {
   const res = await fetch(URL.base, {
-    method: "POST",
-    headers: JSON_HEADERS,
-    body: JSON.stringify(payload)
+    method: "POST", headers: JSON_HEADERS, body: JSON.stringify(payload)
   });
-
   if (!res.ok) throw await getError(res, "Failed to create site");
   return (await res.json()).siteId;
 };
@@ -164,11 +164,8 @@ export const updateSite = async (
   payload: SiteCreateDto & { id: number }
 ): Promise<void> => {
   const res = await fetch(URL.item(payload.id), {
-    method: "PUT",
-    headers: JSON_HEADERS,
-    body: JSON.stringify(payload)
+    method: "PUT", headers: JSON_HEADERS, body: JSON.stringify(payload)
   });
-
   if (!res.ok) throw await getError(res, "Failed to update site");
 };
 
@@ -180,16 +177,12 @@ export const deleteSite = async (siteId: number): Promise<void> => {
 
 // PATCH /Site/scope-status
 export const updateScopeStatus = async (
-  siteScopeId: number,
-  scopeStatusId: number,
-  remarks?: string
+  siteScopeId: number, scopeStatusId: number, remarks?: string
 ): Promise<void> => {
   const res = await fetch(MasterURL.scopeStatus, {
-    method: "PATCH",
-    headers: JSON_HEADERS,
+    method: "PATCH", headers: JSON_HEADERS,
     body: JSON.stringify({ siteScopeId, scopeStatusId, remarks })
   });
-
   if (!res.ok) throw await getError(res, "Failed to update scope status");
 };
 
@@ -198,12 +191,10 @@ export const filterSites = async (
   filters: SiteFilterParams
 ): Promise<SiteListDto[]> => {
   const params = new URLSearchParams();
-
   Object.entries(filters).forEach(([key, value]) => {
     if (value !== undefined && value !== null && String(value).trim() !== "")
       params.append(key, String(value).trim());
   });
-
   return fetchJson<SiteListDto[]>(
     `${URL.filter}${params.size ? `?${params}` : ""}`,
     "Failed to filter sites"

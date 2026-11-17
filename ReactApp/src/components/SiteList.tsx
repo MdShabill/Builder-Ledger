@@ -1,9 +1,8 @@
-// Path: src/components/SiteList.tsx
 
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { getAllSites, filterSites, getMasterData, deleteSite } from "../services/siteService";
-import type { SiteListDto, DropdownItem } from "../services/siteService";
+import type { SiteListDto, DropdownItem, SiteSortColumn, SortOrder } from "../services/siteService";
 import PageHeader from "./PageHeader";
 
 type Filter = "status" | "date" | "budget";
@@ -13,7 +12,8 @@ const fmt = (d: string) => new Date(d).toLocaleDateString("en-GB", {
 });
 
 const addressText = (s: SiteListDto) =>
-  [s.addressTypes, s.addressLine1, s.countryName, s.pinCode].filter(Boolean).join(" - ") || "—";
+  [s.addressTypes, s.addressLine1, s.countryName, s.pinCode]
+    .filter(Boolean).join(" - ") || "—";
 
 const filterBtn = (active: boolean, minWidth: string): React.CSSProperties => ({
   minWidth, padding: "10px 14px", borderRadius: "9px",
@@ -48,6 +48,33 @@ const cell = (extra: React.CSSProperties = {}): React.CSSProperties => ({
   borderRight: "1px solid #E5E7EB", ...extra
 });
 
+// Client-side sorting for filtered results
+const sortFilteredSites = (
+  data: SiteListDto[],
+  column: SiteSortColumn,
+  order: SortOrder
+): SiteListDto[] => {
+  return [...data].sort((a, b) => {
+    let result = 0;
+
+    if (column === "Id") {
+      result = a.id - b.id;
+    } else if (column === "StartedDate") {
+      result = new Date(a.startedDate || 0).getTime() -
+               new Date(b.startedDate || 0).getTime();
+    } else {
+      result = (a[column === "Name" ? "name" : "status"] ?? "")
+        .localeCompare(
+          b[column === "Name" ? "name" : "status"] ?? "",
+          undefined,
+          { sensitivity: "base", numeric: true }
+        );
+    }
+
+    return order === "ASC" ? result : -result;
+  });
+};
+
 function SiteList() {
   const location = useLocation();
 
@@ -57,12 +84,16 @@ function SiteList() {
   const [error, setError] = useState("");
   const [deleteSuccess, setDeleteSuccess] = useState("");
 
-  // Pagination states
+  // Pagination
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [totalCount, setTotalCount] = useState(0);
 
-  // Filter states
+  // Sorting
+  const [sortColumn, setSortColumn] = useState<SiteSortColumn>("Id");
+  const [sortOrder, setSortOrder] = useState<SortOrder>("DESC");
+
+  // Filters
   const [search, setSearch] = useState("");
   const [statusId, setStatusId] = useState<number | undefined>();
   const [fromDate, setFromDate] = useState("");
@@ -74,20 +105,16 @@ function SiteList() {
 
   const successMessage = (location.state as { success?: string })?.success ?? "";
 
-  const hasFilters = !!(
-    search.trim() || statusId !== undefined || fromDate ||
-    toDate || budgetFrom || budgetTo
-  );
+  const hasFilters = !!( search.trim() || statusId !== undefined || fromDate ||
+                         toDate || budgetFrom || budgetTo );
 
   const totalPages = Math.ceil(totalCount / pageSize);
 
-  // Fetch paginated sites
-  const loadPage = async (page = 1, size = pageSize) => {
-    try {
-      setLoading(true);
-      setError("");
+  // Load paginated and sorted sites
+  const loadPage = async ( page = 1, size = pageSize, column = sortColumn, order = sortOrder) => {
+    try { setLoading(true); setError("");
 
-      const result = await getAllSites(page, size);
+      const result = await getAllSites(page, size, column, order);
 
       setSites(result.items);
       setTotalCount(result.totalCount);
@@ -101,12 +128,12 @@ function SiteList() {
     }
   };
 
-  // Existing filter loader
+  // Load filtered sites
   const run = async (fn: () => Promise<SiteListDto[]>) => {
     try {
       setLoading(true);
       setError("");
-      setSites(await fn());
+      setSites(sortFilteredSites(await fn(), sortColumn, sortOrder));
       setOpenFilter(null);
     } catch (err) {
       setError((err as Error).message);
@@ -115,17 +142,28 @@ function SiteList() {
     }
   };
 
-  // Initial loading
-  useEffect(() => {
-    loadPage(1);
+  // Change sorting
+  const handleSort = (column: SiteSortColumn) => {
+    const order: SortOrder = sortColumn === column && sortOrder === "ASC" ? "DESC" : "ASC";
 
-    getMasterData({ siteStatusData: true })
+    setSortColumn(column);
+    setSortOrder(order);
+
+    if (hasFilters) {
+      run(() => filterSites(params()).then(data =>
+        sortFilteredSites(data, column, order)
+      ));
+    } else {
+      loadPage(1, pageSize, column, order);
+    }
+  };
+
+  useEffect(() => { loadPage(1); getMasterData({ siteStatusData: true })
       .then(data => setStatuses(data.statuses ?? []))
       .catch((err: Error) => setError(err.message));
   }, []);
 
-  const toNum = (v: string) =>
-    v.trim() !== "" ? Number(v) : undefined;
+  const toNum = (v: string) => v.trim() !== "" ? Number(v) : undefined;
 
   const params = (status = statusId) => ({
     search: search.trim() || undefined,
@@ -139,7 +177,8 @@ function SiteList() {
   // Apply filters
   const handleApply = () => {
     const p = params();
-    const bad = (n?: number) => n !== undefined && (Number.isNaN(n) || n < 0);
+    const bad = (n?: number) =>
+      n !== undefined && (Number.isNaN(n) || n < 0);
 
     if (fromDate && toDate && fromDate > toDate)
       return setError("From Date cannot be greater than To Date.");
@@ -155,7 +194,6 @@ function SiteList() {
       return setError("Budget From cannot be greater than Budget To.");
 
     if (!hasFilters) return loadPage(1);
-
     run(() => filterSites(p));
   };
 
@@ -176,38 +214,31 @@ function SiteList() {
   };
 
   // Delete site
-  
-const handleDelete = async (id: number) => {
-  if (!window.confirm("Are you sure you want to delete this site?")) return;
+  const handleDelete = async (id: number) => {
+    if (!window.confirm("Are you sure you want to delete this site?"))
+      return;
 
-  try {
-    setError("");
-    setDeleteSuccess("");
+    try {
+      setError("");
+      setDeleteSuccess("");
+      await deleteSite(id);
+      setDeleteSuccess("Your Site Has been Deleted successfully.");
 
-    await deleteSite(id);
-
-    setDeleteSuccess("Your Site Has been Deleted successfully.");
-
-    if (!hasFilters) {
-      const nextPage = sites.length === 1 && pageNumber > 1
-        ? pageNumber - 1
-        : pageNumber;
-
-      await loadPage(nextPage);
-    } else {
-      await run(() => filterSites(params()));
+      if (!hasFilters) {
+        const nextPage = sites.length === 1 && pageNumber > 1 ? pageNumber - 1 : pageNumber;
+        await loadPage(nextPage);
+      } else {
+        await run(() => filterSites(params()));
+      }
+    } catch (err) {
+      setError((err as Error).message);
     }
-
-  } catch (err) {setError((err as Error).message);}
-};
-
+  };
 
   const statusName = statuses.find(s => s.id === statusId)?.name ?? "";
 
   // Filter UI helpers
-  const field = (
-    lbl: string, val: string, set: (v: string) => void,
-    type: string, ph?: string
+  const field = ( lbl: string, val: string, set: (v: string) => void, type: string, ph?: string
   ) => (
     <>
       <label style={popLabel}>{lbl}</label>
@@ -258,9 +289,15 @@ const handleDelete = async (id: number) => {
     </button>
   );
 
+  // Only these three visible columns are sortable
   const HEADERS = [
-    "Site Name", "Started Date", "Status", "Contact Name",
-    "Contact Number", "Address", "Action"
+    { label: "Site Name", column: "Name" as SiteSortColumn },
+    { label: "Started Date", column: "StartedDate" as SiteSortColumn },
+    { label: "Status", column: "Status" as SiteSortColumn },
+    { label: "Contact Name" },
+    { label: "Contact Number" },
+    { label: "Address" },
+    { label: "Action" }
   ];
 
   return (
@@ -270,7 +307,6 @@ const handleDelete = async (id: number) => {
           background: "#fff", borderRadius: "18px", padding: "25px",
           boxShadow: "0 10px 25px rgba(0,0,0,0.15)"
         }}>
-
           <PageHeader title="Site List" addTo="/site-add"
             badge={<span className="badge-pill">
               Total Sites <b>{hasFilters ? sites.length : totalCount}</b>
@@ -353,16 +389,12 @@ const handleDelete = async (id: number) => {
 
           {(deleteSuccess || successMessage) && (
             <div style={{
-              color: "#16A34A",
-              background: "#F0FDF4",
-              border: "1px solid #BBF7D0",
-              padding: "10px 12px",
-              borderRadius: "7px",
-              marginBottom: "12px",
-              fontWeight: 500
-              }}>
+              color: "#16A34A", background: "#F0FDF4",
+              border: "1px solid #BBF7D0", padding: "10px 12px",
+              borderRadius: "7px", marginBottom: "12px", fontWeight: 500
+            }}>
               {deleteSuccess || successMessage}
-           </div>
+            </div>
           )}
 
           {error && (
@@ -391,10 +423,25 @@ const handleDelete = async (id: number) => {
               <thead style={{ background: "#1E3A5F", color: "#fff" }}>
                 <tr>
                   {HEADERS.map((h, i) => (
-                    <th key={h} style={{
+                    <th key={h.label} style={{
                       ...th,
                       borderRight: i === HEADERS.length - 1 ? "none" : th.borderRight
-                    }}>{h}</th>
+                    }}>
+                      {h.column ? (
+                        <button type="button"
+                          onClick={() => handleSort(h.column!)}
+                          style={{
+                            background: "transparent", border: "none",
+                            color: "inherit", font: "inherit",
+                            cursor: "pointer", padding: 0, whiteSpace: "nowrap"
+                          }}>
+                          {h.label}{" "}
+                          {sortColumn === h.column
+                            ? sortOrder === "ASC" ? "▲" : "▼"
+                            : "↕"}
+                        </button>
+                      ) : h.label}
+                    </th>
                   ))}
                 </tr>
               </thead>
@@ -410,32 +457,32 @@ const handleDelete = async (id: number) => {
                       onMouseEnter={e => e.currentTarget.style.background = "#F9FAFB"}
                       onMouseLeave={e => e.currentTarget.style.background = bg}>
 
-                      <td data-label={HEADERS[0]} style={cell()}>
+                      <td data-label="Site Name" style={cell()}>
                         <Link to={`/site-detail/${s.id}`}
                           style={{ color: "inherit", textDecoration: "none" }}>
                           <b>{s.name}</b>
                         </Link>
                       </td>
 
-                      <td data-label={HEADERS[1]}
+                      <td data-label="Started Date"
                         style={cell({ whiteSpace: "nowrap" })}>
                         {s.startedDate ? fmt(s.startedDate) : "—"}
                       </td>
 
-                      <td data-label={HEADERS[2]} style={cell()}>
+                      <td data-label="Status" style={cell()}>
                         {s.status ?? "—"}
                       </td>
 
-                      <td data-label={HEADERS[3]} style={cell()}>
+                      <td data-label="Contact Name" style={cell()}>
                         {s.contactName ?? "—"}
                       </td>
 
-                      <td data-label={HEADERS[4]}
+                      <td data-label="Contact Number"
                         style={cell({ whiteSpace: "nowrap" })}>
                         {s.contactNumber ?? "—"}
                       </td>
 
-                      <td data-label={HEADERS[5]}
+                      <td data-label="Address"
                         onClick={() => setExpandAddress(c => !c)}
                         title={expandAddress ? "Click to collapse Address column" : "Click to expand Address column"}
                         style={cell({
@@ -447,7 +494,7 @@ const handleDelete = async (id: number) => {
                         {addressText(s)}
                       </td>
 
-                      <td data-label={HEADERS[6]}
+                      <td data-label="Action"
                         style={cell({ whiteSpace: "nowrap", borderRight: "none" })}>
                         <Link to={`/site-edit/${s.id}`}
                           style={{ color: "#16A34A", fontWeight: 500, textDecoration: "none" }}>
@@ -482,7 +529,6 @@ const handleDelete = async (id: number) => {
               alignItems: "center", flexWrap: "wrap",
               gap: "12px", marginTop: "20px"
             }}>
-
               <div style={{ color: "#64748B", fontSize: "14px" }}>
                 Showing {(pageNumber - 1) * pageSize + 1}
                 {" - "}
@@ -539,10 +585,8 @@ const handleDelete = async (id: number) => {
                   ))}
                 </select>
               </div>
-
             </div>
           )}
-
         </div>
       </div>
     </div>
