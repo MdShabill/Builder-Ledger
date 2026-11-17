@@ -106,23 +106,14 @@ export const getNavbarSites = async (): Promise<SiteDropdownDto[]> => {
 };
 
 // GET /Site - Paginated and sorted sites
-export const getAllSites = (
-  pageNumber: number = 1,
-  pageSize: number = 10,
-  sortColumn: SiteSortColumn = "Id",
-  sortOrder: SortOrder = "DESC"
-): Promise<PaginatedResponse<SiteListDto>> => {
-  const params = new URLSearchParams({
-    pageNumber: String(pageNumber),
-    pageSize: String(pageSize),
-    sortColumn,
-    sortOrder
-  });
+export const getAllSites = ( pageNumber: number = 1, pageSize: number = 10, sortColumn: SiteSortColumn = "Id",
+                            sortOrder: SortOrder = "DESC", searchKeyword?: string ): Promise<PaginatedResponse<SiteListDto>> => {
+  const params = new URLSearchParams({ pageNumber: String(pageNumber), pageSize: String(pageSize), sortColumn, sortOrder });
 
-  return fetchJson<PaginatedResponse<SiteListDto>>(
-    `${URL.base}?${params}`,
-    "Failed to fetch sites"
-  );
+  if (searchKeyword?.trim())
+    params.append("searchKeyword", searchKeyword.trim());
+
+  return fetchJson<PaginatedResponse<SiteListDto>>( `${URL.base}?${params}`, "Failed to fetch sites" );
 };
 
 // GET /Site/{id}

@@ -105,16 +105,17 @@ function SiteList() {
 
   const successMessage = (location.state as { success?: string })?.success ?? "";
 
-  const hasFilters = !!( search.trim() || statusId !== undefined || fromDate ||
-                         toDate || budgetFrom || budgetTo );
+  const hasAdvancedFilters = !!( statusId !== undefined || fromDate || toDate || budgetFrom || budgetTo );
+
+  const hasFilters = !!(search.trim() || hasAdvancedFilters);
 
   const totalPages = Math.ceil(totalCount / pageSize);
 
   // Load paginated and sorted sites
-  const loadPage = async ( page = 1, size = pageSize, column = sortColumn, order = sortOrder) => {
-    try { setLoading(true); setError("");
+  const loadPage = async ( page = 1, size = pageSize, column = sortColumn, order = sortOrder, keyword = search.trim()) => {
+    try {setLoading(true); setError("");
 
-      const result = await getAllSites(page, size, column, order);
+    const result = await getAllSites(page, size, column, order, keyword);
 
       setSites(result.items);
       setTotalCount(result.totalCount);
@@ -129,11 +130,10 @@ function SiteList() {
   };
 
   // Load filtered sites
-  const run = async (fn: () => Promise<SiteListDto[]>) => {
-    try {
-      setLoading(true);
-      setError("");
-      setSites(sortFilteredSites(await fn(), sortColumn, sortOrder));
+  const run = async ( fn: () => Promise<SiteListDto[]>, column = sortColumn, order = sortOrder) => {
+  try { setLoading(true); setError("");
+
+      setSites(sortFilteredSites(await fn(), column, order));
       setOpenFilter(null);
     } catch (err) {
       setError((err as Error).message);
@@ -149,12 +149,10 @@ function SiteList() {
     setSortColumn(column);
     setSortOrder(order);
 
-    if (hasFilters) {
-      run(() => filterSites(params()).then(data =>
-        sortFilteredSites(data, column, order)
-      ));
+    if (hasAdvancedFilters) {
+      run(() => filterSites(params()), column, order);
     } else {
-      loadPage(1, pageSize, column, order);
+      loadPage(1, pageSize, column, order, search.trim());
     }
   };
 
@@ -193,24 +191,29 @@ function SiteList() {
         p.budgetFrom > p.budgetTo)
       return setError("Budget From cannot be greater than Budget To.");
 
-    if (!hasFilters) return loadPage(1);
-    run(() => filterSites(p));
+    if (!hasAdvancedFilters)
+        return loadPage(1, pageSize, sortColumn, sortOrder, search.trim());
+
+      run(() => filterSites(p));
   };
 
   const handleStatus = (id?: number) => {
-    setStatusId(id);
-    run(() => filterSites(params(id)));
+  setStatusId(id);
+
+  const hasOtherAdvancedFilters = !!(
+    fromDate || toDate || budgetFrom || budgetTo
+  );
+
+  if (id === undefined && !hasOtherAdvancedFilters) {
+      loadPage(1, pageSize, sortColumn, sortOrder, search.trim());
+    } else {
+      run(() => filterSites(params(id)));
+    }
   };
 
   // Clear filters
-  const handleClear = () => {
-    setSearch("");
-    setStatusId(undefined);
-    setFromDate("");
-    setToDate("");
-    setBudgetFrom("");
-    setBudgetTo("");
-    loadPage(1);
+  const handleClear = () => { setSearch(""); setStatusId(undefined); setFromDate("");
+        setToDate(""); setBudgetFrom(""); setBudgetTo(""); loadPage(1, pageSize, sortColumn, sortOrder, "");
   };
 
   // Delete site
@@ -224,13 +227,13 @@ function SiteList() {
       await deleteSite(id);
       setDeleteSuccess("Your Site Has been Deleted successfully.");
 
-      if (!hasFilters) {
-        const nextPage = sites.length === 1 && pageNumber > 1 ? pageNumber - 1 : pageNumber;
+      if (!hasAdvancedFilters) { const nextPage = sites.length === 1 && pageNumber > 1 ? pageNumber - 1 : pageNumber;
+
         await loadPage(nextPage);
       } else {
         await run(() => filterSites(params()));
       }
-    } catch (err) {
+      } catch (err) {
       setError((err as Error).message);
     }
   };
@@ -309,7 +312,7 @@ function SiteList() {
         }}>
           <PageHeader title="Site List" addTo="/site-add"
             badge={<span className="badge-pill">
-              Total Sites <b>{hasFilters ? sites.length : totalCount}</b>
+              Total Sites <b>{hasAdvancedFilters ? sites.length : totalCount}</b>
             </span>}
           />
 
@@ -523,7 +526,7 @@ function SiteList() {
           )}
 
           {/* Pagination */}
-          {!loading && !hasFilters && totalCount > 0 && (
+          {!loading && !hasAdvancedFilters && totalCount > 0 && (
             <div style={{
               display: "flex", justifyContent: "space-between",
               alignItems: "center", flexWrap: "wrap",

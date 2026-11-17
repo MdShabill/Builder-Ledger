@@ -5,7 +5,7 @@ namespace BuilderLedger.Repository.Interfaces
 {
     public interface ISiteRepository
     {
-        public (List<Site> Sites, int TotalCount) GetAll(int pageNumber, int pageSize, string sortColumn, string sortOrder);
+        public (List<Site> Sites, int TotalCount) GetAll(int pageNumber, int pageSize, string sortColumn, string sortOrder, string? searchKeyword);
         public List<Site> GetSites(string? search, int? statusId, DateTime? fromDate, DateTime? toDate, decimal? budgetFrom, decimal? budgetTo);
         public Site GetSiteById(int id);
         public int Update(Site site);
