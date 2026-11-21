@@ -61,41 +61,44 @@ namespace BuilderLedger.API.Controllers
 
         // GET api/Site
         [HttpGet(SiteAPIEndpoints.GetAll)]
-        public IActionResult GetAll( int pageNumber = 1, int pageSize = 10, string sortColumn = "Id",
-                                     string sortOrder = "DESC", string? searchKeyword = null)
+        public IActionResult GetAll([FromQuery] SiteQuery query)
         {
             _logger.LogInformation( "API Action: GetAll | Invoked: {InvokedAt}", DateTime.Now.ToString("HH:mm:ss.fff"));
 
-            if (pageNumber < 1)
+            if (query.PageNumber < 1)
                 return BadRequest("Page number must be greater than 0.");
 
-            if (pageSize < 1 || pageSize > 100)
+            if (query.PageSize < 1 || query.PageSize > 100)
                 return BadRequest("Page size must be between 1 and 100.");
 
-            string[] allowedColumns = { "Id", "Name", "StartedDate", "ExpectedCompletionDate",
-                                       "ExpectedBudget", "Status" };
+            string[] allowedColumns = {"Id", "Name", "StartedDate", "ExpectedCompletionDate",
+                                       "ExpectedBudget", "Status"};
 
-            if (!allowedColumns.Contains(sortColumn, StringComparer.OrdinalIgnoreCase))
+            if (!allowedColumns.Contains(query.SortColumn, StringComparer.OrdinalIgnoreCase))
                 return BadRequest("Invalid sorting column.");
 
-            if (!sortOrder.Equals("ASC", StringComparison.OrdinalIgnoreCase) &&
-                !sortOrder.Equals("DESC", StringComparison.OrdinalIgnoreCase))
+            if (!query.SortOrder.Equals("ASC", StringComparison.OrdinalIgnoreCase) &&
+                !query.SortOrder.Equals("DESC", StringComparison.OrdinalIgnoreCase))
                 return BadRequest("Sort order must be ASC or DESC.");
 
-            searchKeyword = string.IsNullOrWhiteSpace(searchKeyword) ? null : searchKeyword.Trim();
+            query.SearchKeyword = string.IsNullOrWhiteSpace(query.SearchKeyword) ? null : query.SearchKeyword.Trim();
 
-            (List<Site> Sites, int TotalCount) site = _siteRepository.GetAll(pageNumber, pageSize,
-                                                             sortColumn, sortOrder, searchKeyword);
+            (List<Site> Sites, int TotalCount) site =
+                _siteRepository.GetAll(query.PageNumber,query.PageSize,query.SortColumn,
+                                       query.SortOrder,query.SearchKeyword);
 
             var siteDto = _imapper.Map<List<Site>, List<SiteDTO>>(site.Sites);
 
-            int totalPages = (int)Math.Ceiling((double)site.TotalCount / pageSize);
+            int totalPages = (int)Math.Ceiling((double)site.TotalCount / query.PageSize);
 
-            _logger.LogInformation("Total Sites: {TotalCount}, Page: {PageNumber}, Search: {SearchKeyword}", site.TotalCount, pageNumber, searchKeyword);
+            _logger.LogInformation("Total Sites: {TotalCount}, Page: {PageNumber}, Search: {SearchKeyword}",
+                                   site.TotalCount,query.PageNumber,query.SearchKeyword);
 
-            return Ok(new { items = siteDto, totalCount = site.TotalCount, pageNumber, pageSize,
-                            totalPages, sortColumn, sortOrder });
+            return Ok(new { items = siteDto, totalCount = site.TotalCount, pageNumber = query.PageNumber,
+                            pageSize = query.PageSize, totalPages, sortColumn = query.SortColumn,
+                            sortOrder = query.SortOrder });
         }
+
 
         // GET api/Site/filter?search=&statusId=&fromDate=&toDate=&budgetFrom=&budgetTo=
         [HttpGet(SiteAPIEndpoints.FilterSites)]
